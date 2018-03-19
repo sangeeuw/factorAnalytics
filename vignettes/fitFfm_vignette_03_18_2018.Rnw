@@ -78,13 +78,13 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \item \verb"predict(object, newdata, pred.date, ...)": The \code{predict} method for class "ffm" returns a vector or matrix of predicted values for a new data sample or simulated values. \code{pred.date} allows user to choose a date, and hence the estimated factor exposures from that date to be used in the prediction.
 
-\item \verb"summary(object, ...)": The \code{summary} method for class "ffm" returns an object of class \code{"summary.ffm"} containing the summaries of the fitted objects. Printing the factor model summary object outputs the call, estimated factor returns, r-squared and residual volatility for each time period. 
+\item \verb"summary(object, ...)": The \code{summary} method for class "ffm" returns an object of class \code{"summary.ffm"} containing the summaries of the fitted objects. Printing the factor model summary object outputs the call, estimated factor returns, r-squared and residual volatility for each time period.
 
 \end{itemize}
 
 \subsection{Data}
 
-The following examples primarily use the \code{Stock.df} dataset. It contains fundamental and monthly return data for 447 stocks listed on the NYSE. This is a balanced dataset - every asset has a complete set of observations for variables in all time periods. 
+The following examples primarily use the \code{Stock.df} dataset. It contains fundamental and monthly return data for 447 stocks listed on the NYSE. This is a balanced dataset - every asset has a complete set of observations for variables in all time periods.
 <<>>=
 # load the dataset into the environment
 data(Stock.df)
@@ -97,12 +97,12 @@ length(unique(stock[,"TICKER"]))
 # count stocks by GICS sector as of the last time period
 stocklist<-subset(stock,DATE=="2003-12-31")
 table(stocklist$GICS.SECTOR)
-@ 
+@
 
 \newpage
 \section{Fit a fundamental factor model}
 
-A fundamental factor model uses observed asset characteristics such as economic time series such as industrial production growth rate, interest rates, market returns and inflation are used as common factors that contribute to asset returns. For example, the famous single index model by \citet{sharpe1964capital} uses the market excess return as the common factor (captures economy-wide or market risk) for all assets and the unexplained returns in the error term represents the non-market firm specific risk. On the other hand, \citet{chen1986economic} uses a multi-factor model to find that surprise inflation, the spread between long and short-term interest rates and between high and low grade bonds are significantly priced, while the market portfolio, aggregate consumption risk and oil price risk are not priced separately. 
+A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap). After the factor returns are estimated for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
 
 Let's take a look at the arguments for \code{fitFfm}.
 
@@ -110,18 +110,16 @@ Let's take a look at the arguments for \code{fitFfm}.
 args(fitFfm)
 @
 
-The default model fitting method is LS regression and the default variable selection method is "none" (that is, all factors are included in the model). The different model fitting and variable selection options are described in sections 2.3 and 2.4.
+The default model fitting method is ordinary least squares (LS) regression, with the option to choose robust regression (Rob), weighted least squares (WLS) or weighted robust regression (W-Rob). The different model fitting options are demonstrated in the following sections. If weighted regression (WLS or W-Rob) is chosen, inverse of the residual variances are used as weights. \code{resid.scale.type} allows the user to choose the method for computing residual variances - sample variance, EWMA, Robust EWMA and GARCH(1,1).
 
-The default for \code{rf.name} and \code{mkt.name} are NULL. If \code{rf.name} is not specified by the user, perhaps because the data is already in excess return form, then no risk-free rate adjustment is made. Similarly, if \code{mkt.name} is not specified, market-timing factors are not added to the model.
+\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. User can also choose to weight the factor exposures by some characteristic (ex: market cap) via \code{weight.var}.
 
-All other optional control parameters passed through the ellipsis are processed and assimilated internally by \code{fitFfm.control}. More on that in section 2.5.
+\subsection{Single Factor Model}
 
-\subsection{Single Index Model}
-
-Here's an implementation of the single index model for the 6 hypothetical assets described in section 1.3 earlier. Since \code{rf.name} was included, excess returns are computed and used for all variables during model fitting. 
+Here's an implementation of the single index model for the 6 hypothetical assets described in section 1.3 earlier. Since \code{rf.name} was included, excess returns are computed and used for all variables during model fitting.
 <<>>=
 # Single Index Model using SP500
-fit.singleIndex <- fitFfm(asset.names=asset.names, factor.names="SP500.TR", 
+fit.singleIndex <- fitFfm(asset.names=asset.names, factor.names="SP500.TR",
                            rf.name="US.3m.TR", data=managers)
 @
 
@@ -153,14 +151,14 @@ plot(fit.singleIndex, which=12, f.sub=1)
 In the following example, we fit the \citet{henriksson1981market} market timing model, using the SP500 as the market. Market timing accounts for the price movement of the general stock market relative to fixed income securities. The function \code{fitFfmMT}, a wrapper to \code{fitFfm}, includes $down.market = max(0, R_f-R_m)$ as a factor. To test market timing ability, this factor can be added to the single index model as shown below. The coefficient of this down-market factor can be interpreted as the number of "free" put options on the market provided by the manager's market-timings kills. That is, a negative value for the regression estimate would imply a negative value for market timing ability of the manager.
 <<>>=
 # Henriksson-Merton's market timing model
-fit.mktTiming <-  fitFfmMT(asset.names=asset.names, mkt.name="SP500.TR", 
+fit.mktTiming <-  fitFfmMT(asset.names=asset.names, mkt.name="SP500.TR",
                             rf.name="US.3m.TR", data=managers)
 t(fit.mktTiming$beta)
 fit.mktTiming$r2
 fit.mktTiming$resid.sd
 @
 
-% Similarly, to account for market timing with respect to volatility, one can specify \code{mkt.timing="TM"}. Following \citet{treynor1966can}, $market.sqd = (R_m-R_f)^2$ is added as a factor. 
+% Similarly, to account for market timing with respect to volatility, one can specify \code{mkt.timing="TM"}. Following \citet{treynor1966can}, $market.sqd = (R_m-R_f)^2$ is added as a factor.
 
 Note that, the user needs to specify which of the columns in \code{data} corresponds to the market returns using argument \code{mkt.name}.
 
@@ -168,16 +166,16 @@ Note that, the user needs to specify which of the columns in \code{data} corresp
 
 The default fit method is LS regression. The next example performs LS regression using all 3 available factors in the dataset. Notice that the R-squared values have improved considerably when compared to the single index model as well as the market-timing model.
 <<>>=
-fit.ols <- fitFfm(asset.names=asset.names, factor.names=factor.names, 
+fit.ols <- fitFfm(asset.names=asset.names, factor.names=factor.names,
                    rf.name="US.3m.TR", data=managers)
 fit.ols$beta
 fit.ols$r2
 fit.ols$resid.sd
-@ 
+@
 
-Other options include discounted least squares (\code{"DLS"}) and robust regression (\code{"Robust"}). DLS is least squares regression using exponentially discounted weights and accounts for time variation in coefficients. Robust regression is resistant to outliers. 
+Other options include discounted least squares (\code{"DLS"}) and robust regression (\code{"Robust"}). DLS is least squares regression using exponentially discounted weights and accounts for time variation in coefficients. Robust regression is resistant to outliers.
 <<>>=
-fit.robust <- fitFfm(asset.names=asset.names, factor.names=factor.names, 
+fit.robust <- fitFfm(asset.names=asset.names, factor.names=factor.names,
                       rf.name="US.3m.TR", data=managers, fit.method="Robust")
 fit.robust$beta
 fit.robust$r2
@@ -201,13 +199,13 @@ plot(fit.robust, which=5, xlim=c(0,0.045), sub="Robust")
 
 \subsection{Variable Selection}
 
-Though the R-squared values improved by adding more factors in fit.ols (compared to the single index model), one might prefer to employ variable selection methods such as "stepwise", "subsets" or "lars" to avoid over-fitting. The method can be selected via the \code{variable.selection} argument. The default "none", uses all the factors and performs no variable selection. 
+Though the R-squared values improved by adding more factors in fit.ols (compared to the single index model), one might prefer to employ variable selection methods such as "stepwise", "subsets" or "lars" to avoid over-fitting. The method can be selected via the \code{variable.selection} argument. The default "none", uses all the factors and performs no variable selection.
 
-Specifying "stepwise" selects traditional stepwise\footnotemark[3] LS or robust regression using \code{step} or \code{step.lmRob} respectively. Starting from the given initial set of factors, factors are added (or subtracted) only if the regression fit, as measured by the Bayesian Information Criterion (BIC) or Akaike Information Criterion (AIC)\footnotemark[4], improves. 
+Specifying "stepwise" selects traditional stepwise\footnotemark[3] LS or robust regression using \code{step} or \code{step.lmRob} respectively. Starting from the given initial set of factors, factors are added (or subtracted) only if the regression fit, as measured by the Bayesian Information Criterion (BIC) or Akaike Information Criterion (AIC)\footnotemark[4], improves.
 
 Specifying "subsets" enables subsets selection using \code{regsubsets}. The best performing subset of any given size or within a range of subset sizes is chosen. Different methods such as exhaustive search (default), forward or backward stepwise, or sequential replacement can be employed.
 
-Finally, "lars" corresponds to least angle regression using \code{lars} with variants "lasso" (default), "lar", "forward.stagewise" or "stepwise".  
+Finally, "lars" corresponds to least angle regression using \code{lars} with variants "lasso" (default), "lar", "forward.stagewise" or "stepwise".
 
 \footnotetext[3]{The direction for stepwise search can be one of "forward", "backward" or "both". See the help file for more details.}
 
@@ -215,8 +213,8 @@ Finally, "lars" corresponds to least angle regression using \code{lars} with var
 
 The next example uses the \code{"lars"} variable selection method. The default type and criterion used are \code{"lasso"} and the \code{"Cp"} statistic.
 <<fig.show='hide'>>=
-fit.lars <- fitFfm(asset.names=asset.names, factor.names=factor.names, 
-                    data=managers, rf.name="US.3m.TR", 
+fit.lars <- fitFfm(asset.names=asset.names, factor.names=factor.names,
+                    data=managers, rf.name="US.3m.TR",
                     variable.selection="lars")
 fit.lars
 @
@@ -224,12 +222,12 @@ fit.lars
 \newpage
 Using the same set of factors for comparison, let's fit another model using the \code{"subsets"} variable selection method. Here, the best subset of size 2 for each asset is chosen by specifying $nvmin = nvmax = 2$. Note that when $nvmin < nvmax$, the best subset is chosen from a range of subset sizes $[nvmin, nvmax]$. Default is $nvmin = 1$.
 <<>>=
-(fit.sub <- fitFfm(asset.names=asset.names, factor.names=factor.names, 
-                    data=managers, rf.name="US.3m.TR", 
+(fit.sub <- fitFfm(asset.names=asset.names, factor.names=factor.names,
+                    data=managers, rf.name="US.3m.TR",
                     variable.selection="subsets", nvmin=2, nvmax=2))
 @
 
-Comparing the coefficients and R-squared values from the two models, we find that the method that uses more factors for an asset have higher R-squared values as expected. However, when both "lars" and "subsets" chose the same number of factors, "lars" fits have a slightly higher R-squared values.  
+Comparing the coefficients and R-squared values from the two models, we find that the method that uses more factors for an asset have higher R-squared values as expected. However, when both "lars" and "subsets" chose the same number of factors, "lars" fits have a slightly higher R-squared values.
 
 The Figures 4 and 5 display the factor betas from the two fits.
 <<fig.cap="Factor betas: fit.sub", fig.show='hold'>>=
@@ -242,13 +240,13 @@ plot(fit.lars, which=2, f.sub=1:3)
 
 Remarks:
 \begin{itemize}
-\item Variable selection methods \code{"stepwise"} and \code{"subsets"} can be combined with any of the fit methods, "LS", "DLS" or "Robust". If variable selection method selected is \code{"lars"}, \code{fit.method} will be ignored. 
-\item Refer to the next section on \code{fitFfm control} for more details on the control arguments that can be passed to the different variable selection methods. 
+\item Variable selection methods \code{"stepwise"} and \code{"subsets"} can be combined with any of the fit methods, "LS", "DLS" or "Robust". If variable selection method selected is \code{"lars"}, \code{fit.method} will be ignored.
+\item Refer to the next section on \code{fitFfm control} for more details on the control arguments that can be passed to the different variable selection methods.
 \end{itemize}
 
 \subsection{fitFfm control}
 
-Since \code{fitFfm} calls many different regression fitting and variable selection methods, it made sense to collect all the optional controls for these functions and process them via \code{fitFfm.control}. This function is meant to be used internally by \code{fitFfm} when arguments are passed to it via the ellipsis. The use of control parameters was demonstrated with \code{nvmax} and \code{nvmin} in the fit.sub example earlier. 
+Since \code{fitFfm} calls many different regression fitting and variable selection methods, it made sense to collect all the optional controls for these functions and process them via \code{fitFfm.control}. This function is meant to be used internally by \code{fitFfm} when arguments are passed to it via the ellipsis. The use of control parameters was demonstrated with \code{nvmax} and \code{nvmin} in the fit.sub example earlier.
 
 For easy reference, here's a classified list of control parameters accepted and passed by \code{fitFfm} to their respective model fitting (or) model selection functions in other packages. See the corresponding help files for more details on each parameter.
 \begin{itemize}
@@ -274,10 +272,10 @@ There are 3 other significant arguments that can be passed through the \code{...
 methods(class="tsfm")
 @
 
-Many useful generic accessor functions are available for "tsfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the component of asset returns not explained by the factor model. 
-\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.  
+Many useful generic accessor functions are available for "tsfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the component of asset returns not explained by the factor model.
+\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
 
-\code{summary()} prints standard errors and t-statistics for all estimated coefficients in addition to R-squared values and residual volatilities. Argument \code{se.type}, one of "Default", "HC" or "HAC", allows for heteroskedasticity and auto-correlation consistent estimates and standard errors whenever possible. A "summary.tsfm" object is returned which contains a list of summary objects returned by "lm", "lm.Rob" or "lars" for each asset fit. 
+\code{summary()} prints standard errors and t-statistics for all estimated coefficients in addition to R-squared values and residual volatilities. Argument \code{se.type}, one of "Default", "HC" or "HAC", allows for heteroskedasticity and auto-correlation consistent estimates and standard errors whenever possible. A "summary.tsfm" object is returned which contains a list of summary objects returned by "lm", "lm.Rob" or "lars" for each asset fit.
 
 Note: Standard errors are currently not available for the "lars" variable selection method, as there seems to be no consensus on a statistically valid method of calculating standard errors for the lasso predictions.
 
@@ -306,7 +304,7 @@ Following \citet{zivot2006modeling}, $R_{i, t}$, the return on asset $i$ ($i = 1
 \begin{equation}
 R_{i,t} = \alpha_i + \bm\beta_i' \: \mathbf{f_t} + \epsilon_{i,t}
 \end{equation}
-where, $\alpha_i$ is the intercept, $\mathbf{f_t}$ is a $K \times 1$ vector of factor returns at time $t$, $\bm\beta_i$ is a $K \times 1$ vector of factor exposures for asset $i$ and the error terms $\epsilon_{i,t}$ are serially uncorrelated across time and contemporaneously uncorrelated across assets so that $\epsilon_{i,t} \sim iid(0, \sigma_i^2)$. Thus, the variance of asset $i$'s return is given by 
+where, $\alpha_i$ is the intercept, $\mathbf{f_t}$ is a $K \times 1$ vector of factor returns at time $t$, $\bm\beta_i$ is a $K \times 1$ vector of factor exposures for asset $i$ and the error terms $\epsilon_{i,t}$ are serially uncorrelated across time and contemporaneously uncorrelated across assets so that $\epsilon_{i,t} \sim iid(0, \sigma_i^2)$. Thus, the variance of asset $i$'s return is given by
 \begin{equation}
 var(R_{i,t}) = \bm\beta_i'\: var(\mathbf{f_t})\: \bm\beta_i + \sigma_i^2
 \end{equation}
@@ -417,10 +415,10 @@ plot(fit.sub, which=10, f.sub=1:3)
 Some types of individual asset (Figure 2) and group plots (Figures 1, 3-9) have already been demonstrated. Let's take a look at all available arguments for plotting a "tsfm" object.
 <<eval=FALSE>>=
 ## S3 method for class "tsfm"
-plot (x, which=NULL, f.sub=1:2, a.sub=1:6, plot.single=FALSE, asset.name,  
+plot (x, which=NULL, f.sub=1:2, a.sub=1:6, plot.single=FALSE, asset.name,
       colorset=c("royalblue","dimgray","olivedrab","firebrick",
                  "goldenrod","mediumorchid","deepskyblue","chocolate",
-                 "darkslategray"), 
+                 "darkslategray"),
       legend.loc="topleft", las=1, lwd=2, maxlag=15, ...)
 @
 
@@ -430,14 +428,14 @@ This is the default option for plotting. Simply running \code{plot(fit)}, where 
 <<eval=FALSE, results='hide'>>=
 plot(fit.sub)
 
-# Make a plot selection (or 0 to exit): 
+# Make a plot selection (or 0 to exit):
 
 #  1: Factor model coefficients: Alpha
 #  2: Factor model coefficients: Betas
 #  3: Actual and Fitted asset returns
 #  4: R-squared
 #  5: Residual Volatility
-#  6: Scatterplot matrix of residuals, with histograms, density overlays, 
+#  6: Scatterplot matrix of residuals, with histograms, density overlays,
 #     correlations and significance stars
 #  7: Factor Model Residual Correlation
 #  8: Factor Model Return Correlation
@@ -445,8 +443,8 @@ plot(fit.sub)
 # 10: Factor Contribution to ES
 # 11: Factor Contribution to VaR
 # 12: Asset returns vs factor returns (single factor model)
-# 
-# Selection: 
+#
+# Selection:
 @
 
 Remarks:
@@ -471,13 +469,13 @@ If the plot type argument \code{which} is not specified, a menu prompts for user
 \newpage
 \subsection{Individual plots}
 
-Setting \code{plot.single=TRUE} enables individual asset plots. If there is more than one asset fit by the fitted object \code{x}, \code{asset.name} is also necessary. In case the \code{tsfm} object \code{x} contains only a single asset's fit, plot.tsfm can infer \code{asset.name} without user input. 
+Setting \code{plot.single=TRUE} enables individual asset plots. If there is more than one asset fit by the fitted object \code{x}, \code{asset.name} is also necessary. In case the \code{tsfm} object \code{x} contains only a single asset's fit, plot.tsfm can infer \code{asset.name} without user input.
 
 Here's the individual plot menu.
 <<eval=FALSE, results='hide'>>=
 plot(fit.sub, plot.single=TRUE, asset.name="HAM1")
 
-# Make a plot selection (or 0 to exit): 
+# Make a plot selection (or 0 to exit):
 #  1: Actual and fitted asset returns
 #  2: Actual vs fitted asset returns
 #  3: Residuals vs fitted asset returns
@@ -497,8 +495,8 @@ plot(fit.sub, plot.single=TRUE, asset.name="HAM1")
 # 17: Recursive estimates (RE) test of LS regression coefficients
 # 18: Rolling regression over a 24-period observation window
 # 19: Asset returns vs factor returns (single factor model)
-# 
-# Selection: 
+#
+# Selection:
 @
 
 Remarks:

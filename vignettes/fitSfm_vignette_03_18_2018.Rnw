@@ -43,12 +43,13 @@ The purpose of this vignette is to demonstrate the use of \code{fitSfm} and rela
 
 \subsection{Load Package}
 
-The latest version of the \verb"factorAnalytics" package can be downloaded from R-forge through the following command:
-\begin{verbatim}
-install.packages("factorAnalytics", repos="http://R-Forge.R-project.org")
-\end{verbatim}
-Load the package and it's dependencies.
+The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. Note that there are plans for further updates to the package before its moved back to R-Forge and gets a CRAN release later this year.
+
+The package can be installed from GitHub using \verb{devtools} as follows.
 <<message=FALSE, warning=FALSE>>=
+library(devtools)
+install_github("sangeeuw/factorAnalytics")
+# load the package and its dependencies
 library(factorAnalytics)
 options(digits=3)
 @
@@ -78,14 +79,14 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \item \verb"predict(object, newdata, ...)": The \code{predict} method for class "sfm" returns a vector or matrix of predicted values for a new data sample or simulated values.
 
-\item \verb"summary(object, se.type, n.top, ...)": The \code{summary} method for class "sfm" returns an object of class \code{"summary.sfm"} containing the summaries of the fitted "lm" objects, factor loadings, residual volatilities (under the homo-skedasticity assumption), R-squared values and factor mimicking portfolio weights. Printing the factor model summary object outputs the call, coefficients (with standard errors and t-statistics), r-squared and residual volatility for all assets, and top long and short positions for each factor mimicking portfolio. 
+\item \verb"summary(object, se.type, n.top, ...)": The \code{summary} method for class "sfm" returns an object of class \code{"summary.sfm"} containing the summaries of the fitted "lm" objects, factor loadings, residual volatilities (under the homo-skedasticity assumption), R-squared values and factor mimicking portfolio weights. Printing the factor model summary object outputs the call, coefficients (with standard errors and t-statistics), r-squared and residual volatility for all assets, and top long and short positions for each factor mimicking portfolio.
 
 \end{itemize}
 
 \newpage
 \subsection{Data}
 
-The examples in this vignette primarily use the \code{StockReturns} dataset available in the \verb"factorAnalytics" package. It contains two "data.frame" objects, \code{r.M} and \code{r.W}. 
+The examples in this vignette primarily use the \code{StockReturns} dataset available in the \verb"factorAnalytics" package. It contains two "data.frame" objects, \code{r.M} and \code{r.W}.
 <<>>=
 # load the Rdata object
 data(StockReturns)
@@ -97,13 +98,13 @@ colnames(r.M)
 # range of observations
 range(rownames(r.M))
 @
-The \code{r.M} data object, originally used in \citet{berndt1991practice}, has 120 observations of 15 variables (U.S. stock returns) and the frequency is monthly. 
+The \code{r.M} data object, originally used in \citet{berndt1991practice}, has 120 observations of 15 variables (U.S. stock returns) and the frequency is monthly.
 
 <<>>=
 class(r.W)
 dim(r.W)
 range(rownames(r.W))
-@ 
+@
 Whereas, the \code{r.W} data.frame object has 182 observations of 1618 variables (U.S. stock returns) and the frequency is weekly.
 
 The yield curve example in section 3, uses the \code{TreasuryYields} dataset in the \verb"factorAnalytics" package. This containes an "xts" data object \code{tr.yields}. The data was obtained as a "txt" file from the companion website to \citet{ruppert2010statistics}.
@@ -111,7 +112,7 @@ The yield curve example in section 3, uses the \code{TreasuryYields} dataset in 
 data(TreasuryYields)
 head(tr.yields)
 range(index(tr.yields))
-@ 
+@
 The "xts" data object, \code{tr.yields}, contains yields on Treasury bonds at 11 maturities, T = 1, 3, and 6 months and 1, 2, 3, 5, 7, 10, 20, and 30 years. Daily yields were taken from a U.S. Treasury website for the time period January 2, 1990, to October 31, 2008.
 
 Daily yields are missing from some values of T. For example, the 20-year constant maturity series were discontinued at the end of calendar year 1986 and reinstated on October 1, 1993. Omitting the missing values of the differenced data, leaves 819 days of observations. Excluding the one-month and 20-year yields would leave us with a longer series.
@@ -119,9 +120,9 @@ Daily yields are missing from some values of T. For example, the 20-year constan
 \newpage
 \section{Fit a statistical factor model}
 
-In statistical factor models, factor realizations are not directly observable (unlike times series factor models) and the factor loadings are not known (unlike some fundamental factor models). Both factors and betas must be extracted from the returns data using statistical methods such as factor analysis or Principal Component Analysis (PCA). PCA uses the eigen decomposition of the covariance (or correlation) matrix of asset returns to find the first \code{K} principal components that explain the largest portion of the sample covariance matrix of returns. Factor loadings are then estimated using time series regression. Factor analysis involves maximum likelihood optimization to estimate the factor loadings and the residual covariance matrix, constructing the factor realizations and choosing a rotation of the coordinate system for a more meaningful interpretation of the factors. 
+In statistical factor models, factor realizations are not directly observable (unlike times series factor models) and the factor loadings are not known (unlike some fundamental factor models). Both factors and betas must be extracted from the returns data using statistical methods such as factor analysis or Principal Component Analysis (PCA). PCA uses the eigen decomposition of the covariance (or correlation) matrix of asset returns to find the first \code{K} principal components that explain the largest portion of the sample covariance matrix of returns. Factor loadings are then estimated using time series regression. Factor analysis involves maximum likelihood optimization to estimate the factor loadings and the residual covariance matrix, constructing the factor realizations and choosing a rotation of the coordinate system for a more meaningful interpretation of the factors.
 
-In \code{fitSfm}, PCA is applied to extract the factor realizations when the number of time series observations, $T$, is greater than the number of assets, $N$. When $N > T$, the sample covariance matrix for asset returns is singular and Aymptotic principal Component Analysis (APCA) due to \citet{connor1988risk} is performed. 
+In \code{fitSfm}, PCA is applied to extract the factor realizations when the number of time series observations, $T$, is greater than the number of assets, $N$. When $N > T$, the sample covariance matrix for asset returns is singular and Aymptotic principal Component Analysis (APCA) due to \citet{connor1988risk} is performed.
 
 Let's take a look at the arguments for \code{fitSfm}.
 
@@ -129,22 +130,22 @@ Let's take a look at the arguments for \code{fitSfm}.
 args(fitSfm)
 @
 
-A time series of asset returns is input via argument \code{data}. If \code{data} is not of class "xts", rownames must provide an "xts" compatible time index. Specifying \code{check=TRUE}, issues a warning if any asset is found to have identical observations. Note that before model fitting, incomplete cases in \code{data} are removed. 
+A time series of asset returns is input via argument \code{data}. If \code{data} is not of class "xts", rownames must provide an "xts" compatible time index. Specifying \code{check=TRUE}, issues a warning if any asset is found to have identical observations. Note that before model fitting, incomplete cases in \code{data} are removed.
 
-For both PCA and APCA, any number of factors less than \code{min(N,T)} can be chosen explicitly via argument \code{k}. Alternately for APCA, a method to determine the number of factors can be specified: \code{k="bn"} corresponds to \citet{bai2002determining} and \code{k="ck"} corresponds to \citet{connor1993test}. User can specify the maximum number of factors, \code{max.k} to consider with these methods. If not, it is assumed to be either ten or $T-1$, whichever is smaller. 
+For both PCA and APCA, any number of factors less than \code{min(N,T)} can be chosen explicitly via argument \code{k}. Alternately for APCA, a method to determine the number of factors can be specified: \code{k="bn"} corresponds to \citet{bai2002determining} and \code{k="ck"} corresponds to \citet{connor1993test}. User can specify the maximum number of factors, \code{max.k} to consider with these methods. If not, it is assumed to be either ten or $T-1$, whichever is smaller.
 
 For the "ck" method, \code{sig} specifies the desired level of significance. Argument \code{refine} specifies whether a refinement of the APCA procedure from \citet{connor1988risk} that may improve efficiency is to be used.
 
-When \code{corr=TRUE}, the correlation matrix of returns are used for finding the principal components instead of the covariance matrix. This is typically decided by practioners on a case-by-case basis. The variable with the highest variance dominates the PCA when the covariance matrix is used. However, this may be justified if a volatile asset is more interesting for some reason and volatility information shouldn't be discarded. On the other hand, using the correlation matrix standardizes the variables and makes them comparable, avoiding penalizing variables with less dispersion. 
+When \code{corr=TRUE}, the correlation matrix of returns are used for finding the principal components instead of the covariance matrix. This is typically decided by practioners on a case-by-case basis. The variable with the highest variance dominates the PCA when the covariance matrix is used. However, this may be justified if a volatile asset is more interesting for some reason and volatility information shouldn't be discarded. On the other hand, using the correlation matrix standardizes the variables and makes them comparable, avoiding penalizing variables with less dispersion.
 
 Finally, if the median of the 1st principal component is negative, all it's
-factor realizations are automatically inverted to enable more meaningful interpretation. 
+factor realizations are automatically inverted to enable more meaningful interpretation.
 
 \subsection{Principal Component Analysis}
 
-Refer to chapter 15 of \citet{zivot2006modeling} for a description of the procedure used. 
+Refer to chapter 15 of \citet{zivot2006modeling} for a description of the procedure used.
 
-The following example fits a statistical factor model with two principal components for \code{r.M}, the monthly returns on fifteen U.S. stocks described in section 1. Since the number of observations is larger than the number of assets in this case, \code{fitSfm} would choose to perform PCA. 
+The following example fits a statistical factor model with two principal components for \code{r.M}, the monthly returns on fifteen U.S. stocks described in section 1. Since the number of observations is larger than the number of assets in this case, \code{fitSfm} would choose to perform PCA.
 <<>>=
 fit.pca <- fitSfm(r.M, k=2)
 @
@@ -202,7 +203,7 @@ plot(fit.pca, which=13, f.sub=1, n.top=3)
 
 \subsection{Asymptotic Principal Component Analysis}
 
-The following example fits a statistical factor model with two principal components for \code{r.W}, the weekly returns on 1618 U.S. stocks described in section 1. Since the number of observations is smaller than the number of assets in this case, \code{fitSfm} would choose to perform APCA. The primary difference is that the $T \times T$ covariance matrix is used instead. Refer to chapter 15 of \citet{zivot2006modeling} for a description of the procedure used. 
+The following example fits a statistical factor model with two principal components for \code{r.W}, the weekly returns on 1618 U.S. stocks described in section 1. Since the number of observations is smaller than the number of assets in this case, \code{fitSfm} would choose to perform APCA. The primary difference is that the $T \times T$ covariance matrix is used instead. Refer to chapter 15 of \citet{zivot2006modeling} for a description of the procedure used.
 
 <<>>=
 fit.apca <- fitSfm(r.W, k=15)
@@ -220,9 +221,9 @@ plot(fit.apca, f.sub=1:4, which=2)
 @
 
 \newpage
-Note that the number of factors was known or pre-specified in fit.apca above. In practice, the number of factors is unknown and must be determined from the data. Two such procedures are available via \code{fitSfm} via the argument \code{k}: \code{"bn"} corresponds to \citet{bai2002determining} and \code{"ck"} corresponds to \citet{connor1993test}. The maximum number of factors to be considered with these methods is specified via \code{max.k}. By default, it is assumed to be either ten or $T-1$, whichever is smaller. For the "ck" method, \code{sig} specifies the desired level of significance. 
+Note that the number of factors was known or pre-specified in fit.apca above. In practice, the number of factors is unknown and must be determined from the data. Two such procedures are available via \code{fitSfm} via the argument \code{k}: \code{"bn"} corresponds to \citet{bai2002determining} and \code{"ck"} corresponds to \citet{connor1993test}. The maximum number of factors to be considered with these methods is specified via \code{max.k}. By default, it is assumed to be either ten or $T-1$, whichever is smaller. For the "ck" method, \code{sig} specifies the desired level of significance.
 
-Here are some examples using the "ck" or "bn" method for performing APCA with the weekly return data for 1618 U.S. stocks. We find that both these methods select 2 factors and hence output the same factor model in this case. 
+Here are some examples using the "ck" or "bn" method for performing APCA with the weekly return data for 1618 U.S. stocks. We find that both these methods select 2 factors and hence output the same factor model in this case.
 <<>>=
 # APCA with the Bai & Ng method
 fit.apca.bn <- fitSfm(r.W, k="bn")
@@ -249,8 +250,8 @@ plot(fit.apca, which=5, legend.loc="topright")
 methods(class="sfm")
 @
 
-Many useful generic accessor functions are available for "sfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an "xts" data object with the component of asset returns not explained by the factor model. 
-\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.  
+Many useful generic accessor functions are available for "sfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an "xts" data object with the component of asset returns not explained by the factor model.
+\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
 
 <<eval=FALSE>>=
 ## S3 method for class "sfm"
@@ -267,7 +268,7 @@ Here are some examples using the statistical factor models fitted earlier.
 coef(fit.pca)
 
 # compare returns data with fitted and residual values for CITCRP: fit.pca
-CITCRP.ts <- merge(fit.pca$data[,1], fitted(fit.pca)[,1], 
+CITCRP.ts <- merge(fit.pca$data[,1], fitted(fit.pca)[,1],
                    residuals(fit.pca)[,1])
 colnames(CITCRP.ts) <- c("CITCRP.return","CITCRP.fitted","CITCRP.residual")
 tail(CITCRP.ts)
@@ -294,15 +295,15 @@ plot.zoo(tr.yields, main="Treasury yields", col="royalblue")
 <<fig.cap="Treasury yield curve at 3 different dates", fig.width=7, fig.height=4 >>=
 dat <- na.omit(tr.yields) # remove NAs
 time = c(1/12,.25,.5,1, 2, 3, 5, 7, 10, 20, 30)
-plot(time, as.vector(dat[1,]), ylim=c(0,6), type="b", col="royalblue", lwd=2, 
+plot(time, as.vector(dat[1,]), ylim=c(0,6), type="b", col="royalblue", lwd=2,
      pch=19, ylab="Yield", xlab="T")
 lines(time, as.vector(dat[486,]), type="b", lwd=2, col="olivedrab", pch=19)
 lines(time, as.vector(dat[821,]), type="b", lwd=2, col="firebrick", pch=19)
-legend("bottomright", c("07/31/01","07/02/07","10/31/08"), 
+legend("bottomright", c("07/31/01","07/02/07","10/31/08"),
        col=c("royalblue","olivedrab","firebrick"), lwd=2, bty="n")
 @
 
-Next, we fit a statistical factor model to the differenced data, with missing values removed. Since all 11 series have the same units and a comparable scale, PCA is performed on the sample correlation matrix. 
+Next, we fit a statistical factor model to the differenced data, with missing values removed. Since all 11 series have the same units and a comparable scale, PCA is performed on the sample correlation matrix.
 <<>>=
 diff.yield <- na.omit(diff(tr.yields))
 dim(diff.yield)
@@ -314,7 +315,7 @@ Figure 12 shows a screeplot of all the eigenvalues. Approximately 94 percent of 
 plot(yield.pca, which=1, f.sub=1:3, eig.max=1)
 @
 
-A summary of the distribution of the factor loadings and the top three assets with the largest and smallest weights in each factor mimicking portfolio are shown below. 
+A summary of the distribution of the factor loadings and the top three assets with the largest and smallest weights in each factor mimicking portfolio are shown below.
 <<>>=
 beta <- yield.pca$loadings
 summary(beta)
@@ -327,11 +328,11 @@ plot(yield.pca, which=3, f.sub=1:3, a.sub=1:11)
 @
 
 <<fig.cap="The loadings on the 1st three factors across maturities", fig.width=7, fig.height=4>>=
-plot(time, beta[,1], ylim=c(-.8,.8), type="b", col="royalblue", lwd=2, pch=19, 
+plot(time, beta[,1], ylim=c(-.8,.8), type="b", col="royalblue", lwd=2, pch=19,
      ylab="Factor loading", xlab="T")
 lines(time, beta[,2], type="b", lwd=2, col="olivedrab", pch=19)
 lines(time, beta[,3], type="b", lwd=2, col="firebrick", pch=19)
-legend("bottomright", c("F.1","F.2","F.3"), 
+legend("bottomright", c("F.1","F.2","F.3"),
        col=c("royalblue","olivedrab","firebrick"), lwd=2, bty="n")
 @
 
@@ -341,12 +342,12 @@ All the weights in the first portfolio are positive and roughly the same and any
 mu <- colMeans(dat)
 par(mfrow=c(3,1))
 for (i in 1:3) {
-  plot(time, mu, ylim=c(2,5.3), type="b", col="royalblue", lwd=2, pch=19, 
+  plot(time, mu, ylim=c(2,5.3), type="b", col="royalblue", lwd=2, pch=19,
        ylab="Yield", xlab="T")
   lines(time, mu+beta[,i], type="b", lwd=2, lty=2, col="olivedrab", pch=19)
   lines(time, mu-beta[,i], type="b", lwd=2, lty=2, col="firebrick", pch=19)
   legend("bottomright", bty="n",
-         c("mean", paste("mean+F.",i,sep=""), paste("mean-F.",i,sep="")), 
+         c("mean", paste("mean+F.",i,sep=""), paste("mean-F.",i,sep="")),
          col=c("royalblue","olivedrab","firebrick"), lwd=2, lty=c(1,2,2))
 }
 @
@@ -361,7 +362,7 @@ Following \citet{zivot2006modeling}, $R_{i, t}$, the return on asset $i$ ($i = 1
 \begin{equation}
 R_{i,t} = \alpha_i + \bm\beta_i' \: \mathbf{f_t} + \epsilon_{i,t}
 \end{equation}
-where, $\alpha_i$ is the intercept, $\mathbf{f_t}$ is a $K \times 1$ vector of factor returns at time $t$, $\bm\beta_i$ is a $K \times 1$ vector of factor exposures for asset $i$ and the error terms $\epsilon_{i,t}$ are serially uncorrelated across time and contemporaneously uncorrelated across assets so that $\epsilon_{i,t} \sim iid(0, \sigma_i^2)$. Thus, the variance of asset $i$'s return is given by 
+where, $\alpha_i$ is the intercept, $\mathbf{f_t}$ is a $K \times 1$ vector of factor returns at time $t$, $\bm\beta_i$ is a $K \times 1$ vector of factor exposures for asset $i$ and the error terms $\epsilon_{i,t}$ are serially uncorrelated across time and contemporaneously uncorrelated across assets so that $\epsilon_{i,t} \sim iid(0, \sigma_i^2)$. Thus, the variance of asset $i$'s return is given by
 \begin{equation}
 var(R_{i,t}) = \bm\beta_i'\: var(\mathbf{f_t})\: \bm\beta_i + \sigma_i^2
 \end{equation}
@@ -466,11 +467,11 @@ plot(fit.apca, which=10, f.sub=1:4, a.sub=1:6)
 Many plots for "sfm" objects have already been demonstrated. Let's take a look at all the available plot options and arguments.
 <<eval=FALSE>>=
 ## S3 method for class "sfm"
-plot (x, which=NULL, f.sub=1:2, a.sub=1:6, n.top=3, 
-      plot.single=FALSE, asset.name, 
-      colorset=c("royalblue","firebrick","olivedrab","firebrick","goldenrod", 
-                 "mediumorchid","deepskyblue","chocolate","darkslategray"), 
-      legend.loc="topleft", las=1, lwd=2, maxlag=15, eig.max=0.9, 
+plot (x, which=NULL, f.sub=1:2, a.sub=1:6, n.top=3,
+      plot.single=FALSE, asset.name,
+      colorset=c("royalblue","firebrick","olivedrab","firebrick","goldenrod",
+                 "mediumorchid","deepskyblue","chocolate","darkslategray"),
+      legend.loc="topleft", las=1, lwd=2, maxlag=15, eig.max=0.9,
       cum.var=TRUE, ...)
 @
 
@@ -480,25 +481,25 @@ This is the default option for plotting. Simply running \code{plot(fit)}, where 
 <<eval=FALSE, results='hide'>>=
 plot(fit.pca)
 
-# Make a plot selection (or 0 to exit): 
-# 
+# Make a plot selection (or 0 to exit):
+#
 #  1: Screeplot of eigenvalues
 #  2: Time series plot of estimated factors
 #  3: Estimated factor loadings
 #  4: Histogram of R-squared
 #  5: Histogram of residual volatility
-#  6: Scatterplot matrix of residuals, with histograms, density overlays, 
+#  6: Scatterplot matrix of residuals, with histograms, density overlays,
 #     correlations and significance stars
 #  7: Factor model residual correlation
 #  8: Factor model return correlation
 #  9: Factor contribution to SD
 # 10: Factor contribution to ES
 # 11: Factor contribution to VaR
-# 12: Factor mimicking portfolio weights - top long and short positions in each 
+# 12: Factor mimicking portfolio weights - top long and short positions in each
 #     factor
 # 13: Asset correlations - top long and short positions in each factor
-# 
-# Selection: 
+#
+# Selection:
 @
 
 Remarks:
@@ -519,14 +520,14 @@ Note that Figures 1-9, 12, 13, 16-19 in the vignette above are all group plots.
 \newpage
 \subsection{Individual plots}
 
-Setting \code{plot.single=TRUE} enables individual asset plots. If there is more than one asset fit by the fitted object \code{x}, \code{asset.name} is also necessary. In case the \code{tsfm} object \code{x} contains only a single asset's fit, plot.tsfm can infer \code{asset.name} without user input. 
+Setting \code{plot.single=TRUE} enables individual asset plots. If there is more than one asset fit by the fitted object \code{x}, \code{asset.name} is also necessary. In case the \code{tsfm} object \code{x} contains only a single asset's fit, plot.tsfm can infer \code{asset.name} without user input.
 
 Here's the individual plot menu.
 <<eval=FALSE, results='hide'>>=
 plot(fit.pca, plot.single=TRUE, asset.name="DATGEN")
 
-# Make a plot selection (or 0 to exit): 
-# 
+# Make a plot selection (or 0 to exit):
+#
 #  1: Actual and fitted asset returns
 #  2: Actual vs fitted asset returns
 #  3: Residuals vs fitted asset returns
@@ -546,7 +547,7 @@ plot(fit.pca, plot.single=TRUE, asset.name="DATGEN")
 # 17: Recursive estimates (RE) test of LS regression coefficients
 # 18: Rolling estimates over a 24-period observation window
 #
-# Selection: 
+# Selection:
 @
 
 Here are some examples which don't need interactive user input. These are individual plots for the DATGEN asset in the PCA fit illustrated earlier.
