@@ -24,7 +24,8 @@ fmVaRDecomp(object, ...)
 \item{...}{other optional arguments passed to \code{\link[stats]{quantile}}.}
 
 \item{factor.cov}{optional user specified factor covariance matrix with 
-named columns; defaults to the sample covariance matrix.}
+named columns; defaults to the sample covariance of historical factor returns
+(tsfm) or estimated factor returns (sfm and ffm).}
 
 \item{p}{tail probability for calculation. Default is 0.05.}
 

@@ -10,10 +10,11 @@
 fitFfm(data, asset.var, ret.var, date.var, exposure.vars, weight.var = NULL,
   fit.method = c("LS", "WLS", "Rob", "W-Rob"), rob.stats = FALSE,
   full.resid.cov = FALSE, z.score = c("none", "crossSection", "timeSeries"),
-  addIntercept = FALSE, lagExposures = TRUE, resid.scaleType = "stdDev",
-  lambda = 0.9, GARCH.params = list(omega = 0.09, alpha = 0.1, beta = 0.81),
-  GARCH.MLE = FALSE, stdReturn = FALSE, analysis = c("none", "ISM",
-  "NEW"), targetedVol = 0.06, ...)
+  add.intercept = FALSE, lag.exposures = TRUE,
+  resid.scale.type = c("stdDev", "EWMA", "robEWMA", "GARCH"),
+  GARCH.params = list(omega = 0.09, alpha = 0.1, beta = 0.81), lambda = 0.9,
+  GARCH.MLE = FALSE, std.return = FALSE, analysis = c("none", "ISM",
+  "NEW"), target.vol = 0.06, ...)
 
 \method{coef}{ffm}(object, ...)
 
@@ -22,100 +23,100 @@ fitFfm(data, asset.var, ret.var, date.var, exposure.vars, weight.var = NULL,
 \method{residuals}{ffm}(object, ...)
 }
 \arguments{
-\item{data}{data.frame of the balanced panel data containing the variables 
-\code{asset.var}, \code{ret.var}, \code{exposure.vars}, \code{date.var} and 
+\item{data}{data.frame of the balanced panel data containing the variables
+\code{asset.var}, \code{ret.var}, \code{exposure.vars}, \code{date.var} and
 optionally, \code{weight.var}.}
 
 \item{asset.var}{character; name of the variable for asset names.}
 
 \item{ret.var}{character; name of the variable for asset returns.}
 
-\item{date.var}{character; name of the variable containing the dates 
+\item{date.var}{character; name of the variable containing the dates
 coercible to class \code{Date}.}
 
-\item{exposure.vars}{vector; names of the variables containing the 
+\item{exposure.vars}{vector; names of the variables containing the
 fundamental factor exposures.}
 
-\item{weight.var}{character; name of the variable containing the weights 
-used when standarizing style factor exposures. Default is \code{NULL}. See 
+\item{weight.var}{character; name of the variable containing the weights
+used when standarizing style factor exposures. Default is \code{NULL}. See
 Details.}
 
-\item{fit.method}{method for estimating factor returns; one of "LS", "WLS" 
+\item{fit.method}{method for estimating factor returns; one of "LS", "WLS"
 "Rob" or "W-Rob". See details. Default is "LS".}
 
-\item{rob.stats}{logical; If \code{TRUE}, robust estimates of covariance, 
-correlation, location and univariate scale are computed as appropriate (see 
+\item{rob.stats}{logical; If \code{TRUE}, robust estimates of covariance,
+correlation, location and univariate scale are computed as appropriate (see
 Details). Default is \code{FALSE}.}
 
-\item{full.resid.cov}{logical; If \code{TRUE}, a full residual covariance 
-matrix is estimated. Otherwise, a diagonal residual covariance matrix is 
+\item{full.resid.cov}{logical; If \code{TRUE}, a full residual covariance
+matrix is estimated. Otherwise, a diagonal residual covariance matrix is
 estimated. Default is \code{FALSE}.}
 
-\item{z.score}{method for exposure standardization; one of "none", 
+\item{z.score}{method for exposure standardization; one of "none",
 "crossSection", or "timeSeries". Default is \code{"none"}.}
 
-\item{addIntercept}{logical; If \code{TRUE}, intercept is added in the 
+\item{add.intercept}{logical; If \code{TRUE}, intercept is added in the
 exposure matrix. Default is \code{FALSE}.}
 
-\item{lagExposures}{logical; If \code{TRUE}, the style exposures in the 
+\item{lag.exposures}{logical; If \code{TRUE}, the style exposures in the
 exposure matrix are lagged by one time period. Default is \code{TRUE}.}
 
-\item{resid.scaleType}{character; method for computing weights when 
-fit.method is set to WLS or W-Rob; one of \code{stdDev}, \code{EWMA}, 
+\item{resid.scale.type}{character; method for computing weights when
+fit.method is set to WLS or W-Rob; one of \code{stdDev}, \code{EWMA},
 \code{robEWMA}, or \code{GARCH}. Default is \code{stdDev}. See details.}
 
-\item{lambda}{value of lambda to be used for the EWMA estimation of residual 
-variances. Default is 0.9.}
-
-\item{GARCH.params}{list containing GARCH parameters omega, alpha, and beta. 
-Default values are 0.09, 0.1, 0.81 respectively. Valid only when 
+\item{GARCH.params}{list containing GARCH parameters omega, alpha, and beta.
+Default values are 0.09, 0.1, 0.81 respectively. Valid only when
 \code{GARCH.MLE} is set to \code{FALSE}.}
+
+\item{lambda}{value of lambda to be used for the EWMA estimation of residual
+variances. Default is 0.9.}
 
 \item{GARCH.MLE}{logical; If \code{TRUE}, GARCH parameters are estimated by
 maximum liklihood estimation. Default is \code{FALSE}.}
 
-\item{stdReturn}{logical; If \code{TRUE}, the returns will be standardized 
-using GARCH(1,1) volatilities. Default is \code{FALSE}}
+\item{std.return}{logical; If \code{TRUE}, the returns will be standardized
+using GARCH(1,1) volatilities. Default is \code{FALSE}.}
 
-\item{analysis}{method used in the analysis of fundamental law of active 
+\item{analysis}{method used in the analysis of fundamental law of active
 management; one of "none", "ISM", or "NEW". Default is "none".}
 
-\item{targetedVol}{numeric; the targeted portfolio volatility in the 
+\item{target.vol}{numeric; the targeted portfolio volatility in the
 analysis. Default is 0.06.}
 
 \item{...}{potentially further arguments passed.}
 
-\item{object}{a fit object of class \code{ffm} which is returned by 
+\item{object}{a fit object of class \code{ffm} which is returned by
 \code{fitFfm}}
 }
 \value{
-\code{fitFfm} returns an object of class \code{"ffm"} for which 
-\code{print}, \code{plot}, \code{predict} and \code{summary} methods exist. 
+\code{fitFfm} returns an object of class \code{"ffm"} for which
+\code{print}, \code{plot}, \code{predict} and \code{summary} methods exist.
 
-The generic accessor functions \code{coef}, \code{fitted} and 
-\code{residuals} extract various useful features of the fit object. 
-Additionally, \code{fmCov} computes the covariance matrix for asset returns 
+The generic accessor functions \code{coef}, \code{fitted} and
+\code{residuals} extract various useful features of the fit object.
+Additionally, \code{fmCov} computes the covariance matrix for asset returns
 based on the fitted factor model.
 
-An object of class \code{"ffm"} is a list containing the following 
+An object of class \code{"ffm"} is a list containing the following
 components:
-\item{factor.fit}{list of fitted objects that estimate factor returns in 
-each time period. Each fitted object is of class \code{lm} if 
-\code{fit.method="LS" or "WLS"}, or, class \code{lmRob} if 
+\item{factor.fit}{list of fitted objects that estimate factor returns in
+each time period. Each fitted object is of class \code{lm} if
+\code{fit.method="LS" or "WLS"}, or, class \code{lmRob} if
 \code{fit.method="Rob" or "W-Rob"}.}
 \item{beta}{N x K matrix of factor exposures for the last time period.}
 \item{factor.returns}{xts object of K-factor returns (including intercept).}
 \item{residuals}{xts object of residuals for N-assets.}
 \item{r2}{length-T vector of R-squared values.}
 \item{factor.cov}{K x K covariance matrix of the factor returns.}
-\item{g.cov}{G x G covariance matrix of the coefficients for a Sector plus 
+\item{g.cov}{G x G covariance matrix of the coefficients for a Sector plus
 Market and Sector plus Country plus Global Market models.}
 \item{resid.cov}{N x N covariance matrix of residuals.}
-\item{return.cov}{N x N return covariance estimated by the factor model, 
+\item{return.cov}{N x N return covariance estimated by the factor model,
 using the factor exposures from the last time period.}
 \item{restriction.mat}{restriction matrix used in the computation of f=Rg.}
-\item{resid.var}{N x T matrix of estimated residual variances. It will be a 
-length-N vector of sample residual variances when \code{resid.scaleType} is 
+\item{resid.var}{N x T matrix of estimated residual variances. It will be a
+length-N vector of sample residual variances when \code{resid.scale.type} is
 set to \code{stdDev}}
 \item{call}{the matched function call.}
 \item{data}{data frame object as input.}
@@ -128,11 +129,11 @@ set to \code{stdDev}}
 \item{asset.names}{length-N vector of asset names.}
 \item{factor.names}{length-K vector of factor.names.}
 \item{time.periods}{length-T vector of dates.}
-\item{activeWeights}{active weights obtaining from the fundamental law of 
+\item{activeWeights}{active weights obtaining from the fundamental law of
 active management}
 \item{activeReturns}{active returns corresponding to the active weights}
 \item{IR}{the vector of Granold-K, asymptotic IR, and finite-sample IR.}
-Where N is the number of assets, K is the number of factors (including the 
+Where N is the number of assets, K is the number of factors (including the
 intercept or dummy variables) and T is the number of unique time periods.
 }
 \description{
@@ -144,38 +145,38 @@ etc. to calculate the common risk factors. An object of class \code{"ffm"}
 is returned.
 }
 \details{
-Estimation method "LS" corresponds to ordinary least squares using 
-\code{\link[stats]{lm}} and "Rob" is robust regression using 
-\code{\link[robust]{lmRob}}. "WLS" is weighted least squares using estimates 
-of the residual variances from LS regression as weights (feasible GLS). 
+Estimation method "LS" corresponds to ordinary least squares using
+\code{\link[stats]{lm}} and "Rob" is robust regression using
+\code{\link[robust]{lmRob}}. "WLS" is weighted least squares using estimates
+of the residual variances from LS regression as weights (feasible GLS).
 Similarly, "W-Rob" is weighted robust regression.
 
-The weights to be used in "WLS" or "W-Rob" can be set using 
-\code{resid.scaleType} argument which computes the residual variances in one 
-of the following ways - sample variance, EWMA, Robust EWMA and GARCH(1,1). 
-The inverse of these residual variances are used as the weights. For EWMA 
-model, lambda = 0.9 is used as default and for GARCH(1,1) omega = 0.09, 
-alpha = 0.1, and beta = 0.81 are used as default as mentioned in Martin & 
-Ding (2017). These default parameters can be changed using the arguments 
-\code{lambda}, \code{GARCH.params} for EWMA and GARCH respectively. To 
-compute GARCH parameters via MLE, set \code{GARCH.MLE} to \code{TRUE}. 
- 
-Standardizing style factor exposures: The exposures can be standardized into
-z-scores using regular or robust (see \code{rob.stats}) measures of location 
-and scale. Further, \code{weight.var}, a variable such as market-cap, can be 
-used to compute the weighted mean exposure, and an equal-weighted standard 
-deviation of the exposures about the weighted mean. This may help avoid an 
-ill-conditioned covariance matrix. Default option equally weights exposures 
-of different assets each period. 
+The weights to be used in "WLS" or "W-Rob" can be set using
+\code{resid.scale.type} argument which computes the residual variances in one
+of the following ways - sample variance, EWMA, Robust EWMA and GARCH(1,1).
+The inverse of these residual variances are used as the weights. For EWMA
+model, lambda = 0.9 is used as default and for GARCH(1,1) omega = 0.09,
+alpha = 0.1, and beta = 0.81 are used as default as mentioned in Martin &
+Ding (2017). These default parameters can be changed using the arguments
+\code{lambda}, \code{GARCH.params} for EWMA and GARCH respectively. To
+compute GARCH parameters via MLE, set \code{GARCH.MLE} to \code{TRUE}.
 
-If \code{rob.stats=TRUE}, \code{\link[robust]{covRob}} is used to compute a 
-robust estimate of the factor covariance/correlation matrix, and, 
-\code{\link[robustbase]{scaleTau2}} is used to compute robust tau-estimates 
-of univariate scale for residuals during "WLS" or "W-Rob" regressions. When 
-standardizing style exposures, the \code{\link[stats]{median}} and 
+Standardizing style factor exposures: The exposures can be standardized into
+z-scores using regular or robust (see \code{rob.stats}) measures of location
+and scale. Further, \code{weight.var}, a variable such as market-cap, can be
+used to compute the weighted mean exposure, and an equal-weighted standard
+deviation of the exposures about the weighted mean. This may help avoid an
+ill-conditioned covariance matrix. Default option equally weights exposures
+of different assets each period.
+
+If \code{rob.stats=TRUE}, \code{\link[robust]{covRob}} is used to compute a
+robust estimate of the factor covariance/correlation matrix, and,
+\code{\link[robustbase]{scaleTau2}} is used to compute robust tau-estimates
+of univariate scale for residuals during "WLS" or "W-Rob" regressions. When
+standardizing style exposures, the \code{\link[stats]{median}} and
 \code{\link[stats]{mad}} are used for location and scale respectively.
-When \code{resid.scaleType} is EWMA or GARCH, the residual covariance is 
-equal to the diagonal matrix of the estimated residual variances in last 
+When \code{resid.scale.type} is EWMA or GARCH, the residual covariance is
+equal to the diagonal matrix of the estimated residual variances in last
 time period.
 
 The original function was designed by Doug Martin and initially implemented
@@ -183,6 +184,7 @@ in S-PLUS by a number of University of Washington Ph.D. students:
 Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the
 function to R and Yi-An Chen modified that code. Sangeetha Srinivasan
 re-factored, tested, and expanded the functionalities and S3 methods.
+Avinash Acharya and Chindhanai Uthaisaad further added new functionalities.
 }
 \examples{
 
@@ -191,24 +193,24 @@ re-factored, tested, and expanded the functionalities and S3 methods.
 
 # fit a fundamental factor model
 exposure.vars <- c("P2B", "MKTCAP")
-fit <- fitFfm(data=factorDataSetDjia5Yrs, asset.var="TICKER", ret.var="RETURN", 
+fit <- fitFfm(data=factorDataSetDjia5Yrs, asset.var="TICKER", ret.var="RETURN",
               date.var="DATE", exposure.vars=exposure.vars)
 names(fit)
 
 # fit a Industry Factor Model with Intercept
 exposure.vars <- c("SECTOR","P2B")
-fit1 <- fitFfm(data=factorDataSetDjia5Yrs, asset.var="TICKER", ret.var="RETURN", 
-               date.var="DATE", exposure.vars=exposure.vars, addIntercept=TRUE)
-               
+fit1 <- fitFfm(data=factorDataSetDjia5Yrs, asset.var="TICKER", ret.var="RETURN",
+               date.var="DATE", exposure.vars=exposure.vars, add.intercept=TRUE)
+
 # Fit a SECTOR+COUNTRY+Style model with Intercept
 # Create a COUNTRY column with just 3 countries
 
  factorDataSetDjia5Yrs$COUNTRY = rep(rep(c(rep("US",1),rep("GERMANY",1)),11),60)
  exposure.vars= c("SECTOR","COUNTRY","P2B","MKTCAP")
- 
- fit.MICM <- fitFfm(data=factorDataSetDjia5Yrs, asset.var="TICKER", ret.var="RETURN", 
-                   date.var="DATE", exposure.vars=exposure.vars, addIntercept=TRUE)
-         
+
+ fit.MICM <- fitFfm(data=factorDataSetDjia5Yrs, asset.var="TICKER", ret.var="RETURN",
+                   date.var="DATE", exposure.vars=exposure.vars, add.intercept=TRUE)
+
 }
 \references{
 Menchero, J. (2010). The Characteristics of Factor Portfolios. Journal of
@@ -217,17 +219,17 @@ Performance Measurement, 15(1), 52-62.
 Grinold, R. C., & Kahn, R. N. (2000). Active portfolio management (Second
 Ed.). New York: McGraw-Hill.
 
-Ding, Z., & Martin, R. D. (2017). The fundamental law of active management: 
+Ding, Z., & Martin, R. D. (2017). The fundamental law of active management:
 Redux. Journal of Empirical Finance, 43, 91-114.
 
-And, the following extractor functions: \code{\link[stats]{coef}}, 
+And, the following extractor functions: \code{\link[stats]{coef}},
 \code{\link[stats]{fitted}}, \code{\link[stats]{residuals}},
-\code{\link{fmCov}}, \code{\link{fmSdDecomp}}, \code{\link{fmVaRDecomp}} 
+\code{\link{fmCov}}, \code{\link{fmSdDecomp}}, \code{\link{fmVaRDecomp}}
 and \code{\link{fmEsDecomp}}.
 
 \code{\link{paFm}} for Performance Attribution.
 }
 \author{
-Sangeetha Srinivasan, Guy Yollin, Yi-An Chen, Avinash Acharya and 
+Sangeetha Srinivasan, Guy Yollin, Yi-An Chen, Avinash Acharya and
 Chindhanai Uthaisaad
 }

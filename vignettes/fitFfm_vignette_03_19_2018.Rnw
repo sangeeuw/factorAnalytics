@@ -54,6 +54,8 @@ library(factorAnalytics)
 options(digits=3)
 @
 
+The focus of this vignette is on the \code{fitFfm} function and related functionalities. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code. Sangeetha Srinivasan tested, and expanded the functionalities and S3 methods. Avinash Acharya and Chindhanai Uthaisaad further added new functionalities such as EWMA and GARCH errors, allowing for a market + industry model specification etc.
+
 \subsection{Summary of related functions}
 Here's a list of the functions and methods demonstrated in this vignette:
 
@@ -113,36 +115,38 @@ args(fitFfm)
 
 The default model fitting method is ordinary least squares (LS) regression, with the option to choose robust regression (Rob), weighted least squares (WLS) or weighted robust regression (W-Rob). The different model fitting options are demonstrated in the following sections. If weighted regression (WLS or W-Rob) is chosen, inverse of the residual variances are used as weights. \code{resid.scale.type} allows the user to choose the method for computing residual variances - sample variance, EWMA, Robust EWMA and GARCH(1,1).
 
-\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. User can also choose to weight the factor exposures by some characteristic (ex: market cap) via \code{weight.var}.
+\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. User can also choose to weight the factor exposures by some characteristic (ex: market cap) via \code{weight.var}. \code{add.intercept} gives the option to add an intercept term for fitting a Market + Sector or a Market + Sector + Country model. Note that these models can also include other style factors. \code{lag.exposures} gives the option to use lag the factor exposures by one time period. \code{full.resid.cov} provides the option to choose between a diagonal vs. full residual covariance matrix. And, \code{rob.stats} allows for robust estimates of covariance, correlation, location and univariate scale.
 
-\subsection{Single Factor Model}
+These and other control parameters are demonstrated in the following sections.
 
-Here's an implementation of the single index model for the 6 hypothetical assets described in section 1.3 earlier. Since \code{rf.name} was included, excess returns are computed and used for all variables during model fitting.
+\subsection{BARRA-type Industry Factor Model}
+
+Here's an implementation of a stylized BARRA-type industry (sector) factor model for the 447 NYSE stocks described in section 1.3 earlier. Note that there are 10 mutually exclusive GICS sector classifications in any given time period.
 <<>>=
-# Single Index Model using SP500
-fit.singleIndex <- fitFfm(asset.names=asset.names, factor.names="SP500.TR",
-                           rf.name="US.3m.TR", data=managers)
+# Sector Factor Model
+fit.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+                     date.var="DATE", exposure.vars="GICS.SECTOR")
 @
 
-The resulting object, \code{fit.singleIndex}, has the following attributes.
+The resulting object, \code{fit.sector}, has the following attributes.
 <<>>=
-class(fit.singleIndex)
-names(fit.singleIndex)
+class(fit.sector)
+names(fit.sector)
 @
 
-The component \code{asset.fit} contains a list of "lm" objects\footnotemark[1], one for each asset. The estimated coefficients\footnotemark[2] are in \code{alpha} and \code{beta}. R-squared and residual standard deviations are in \code{r2} and \code{resid.sd} respectively. The remaining components contain the input choices and the data.
+The component \code{factor.fit} contains a list of "lm" or "lmRob" objects\footnotemark[1], one for each time period. The estimated factor returns are in \code{factor.returns} and factor exposures from the last time period are in \code{beta}. R-squared and residual variance are in \code{r2} and \code{resid.var} respectively. The estimated factor, residual and asset return covariance matrices are in \code{factor.cov}, \code{resid.cov} and \code{return.cov} respectively. The remaining components contain the input choices and the data.
 
-\footnotetext[1]{The fitted objects can be of class "lm", "lmRob" or "lars" depending on the fit and variable selection methods.}
-
-\footnotetext[2]{Refer to the summary method in section 2.6 for standard errors, degrees of freedom, t-statistics etc.}
+\footnotetext[1]{The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}}
 
 <<>>=
-fit.singleIndex # print the fitted "tsfm" object
+fit.sector # print the fitted "tsfm" object
 @
+
+Looking at the estimated factor returns by sector, we note that the "Information Technology" sector had the highest average return (not suprising given the historical period covers most of the dot-com bubble).
 
 Figure 1 shows the single factor linear fits for the assets. (Plot options are explained later in section 4.)
 
-<<fig.cap="Single Index model: Asset returns vs Factor Returns">>=
+<<fig.cap="Sector model: Asset returns vs Factor Returns">>=
 # plot asset returns vs factor returns for the single factor models
 plot(fit.singleIndex, which=12, f.sub=1)
 @
