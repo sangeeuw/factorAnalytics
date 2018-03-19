@@ -3,6 +3,9 @@ library(knitr)
 opts_chunk$set(concordance=TRUE)
 
 ## ----message=FALSE, warning=FALSE----------------------------------------
+library(devtools)
+install_github("sangeeuw/factorAnalytics")
+# load the package and its dependencies
 library(factorAnalytics)
 options(digits=3)
 
@@ -12,7 +15,7 @@ colnames(managers)
 range(index(managers))
 
 ## ------------------------------------------------------------------------
-asset.names <- colnames(managers[,1:6]) 
+asset.names <- colnames(managers[,1:6])
 factor.names <- colnames(managers[,7:9])
 mkt.name <- "SP500.TR"
 rf.name <- "US.3m.TR"
@@ -27,7 +30,7 @@ args(fitTsfm)
 
 ## ------------------------------------------------------------------------
 # Single Index Model using SP500
-fit.singleIndex <- fitTsfm(asset.names=asset.names, factor.names="SP500.TR", 
+fit.singleIndex <- fitTsfm(asset.names=asset.names, factor.names="SP500.TR",
                            rf.name="US.3m.TR", data=managers)
 
 ## ------------------------------------------------------------------------
@@ -43,21 +46,21 @@ plot(fit.singleIndex, which=12, f.sub=1)
 
 ## ------------------------------------------------------------------------
 # Henriksson-Merton's market timing model
-fit.mktTiming <-  fitTsfmMT(asset.names=asset.names, mkt.name="SP500.TR", 
+fit.mktTiming <-  fitTsfmMT(asset.names=asset.names, mkt.name="SP500.TR",
                             rf.name="US.3m.TR", data=managers)
 t(fit.mktTiming$beta)
 fit.mktTiming$r2
 fit.mktTiming$resid.sd
 
 ## ------------------------------------------------------------------------
-fit.ols <- fitTsfm(asset.names=asset.names, factor.names=factor.names, 
+fit.ols <- fitTsfm(asset.names=asset.names, factor.names=factor.names,
                    rf.name="US.3m.TR", data=managers)
 fit.ols$beta
 fit.ols$r2
 fit.ols$resid.sd
 
 ## ------------------------------------------------------------------------
-fit.robust <- fitTsfm(asset.names=asset.names, factor.names=factor.names, 
+fit.robust <- fitTsfm(asset.names=asset.names, factor.names=factor.names,
                       rf.name="US.3m.TR", data=managers, fit.method="Robust")
 fit.robust$beta
 fit.robust$r2
@@ -76,14 +79,14 @@ plot(fit.ols, which=5, xlim=c(0,0.045), sub="LS")
 plot(fit.robust, which=5, xlim=c(0,0.045), sub="Robust")
 
 ## ----fig.show='hide'-----------------------------------------------------
-fit.lars <- fitTsfm(asset.names=asset.names, factor.names=factor.names, 
-                    data=managers, rf.name="US.3m.TR", 
+fit.lars <- fitTsfm(asset.names=asset.names, factor.names=factor.names,
+                    data=managers, rf.name="US.3m.TR",
                     variable.selection="lars")
 fit.lars
 
 ## ------------------------------------------------------------------------
-(fit.sub <- fitTsfm(asset.names=asset.names, factor.names=factor.names, 
-                    data=managers, rf.name="US.3m.TR", 
+(fit.sub <- fitTsfm(asset.names=asset.names, factor.names=factor.names,
+                    data=managers, rf.name="US.3m.TR",
                     variable.selection="subsets", nvmin=2, nvmax=2))
 
 ## ----fig.cap="Factor betas: fit.sub", fig.show='hold'--------------------

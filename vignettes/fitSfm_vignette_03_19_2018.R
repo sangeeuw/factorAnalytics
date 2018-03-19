@@ -3,6 +3,9 @@ library(knitr)
 opts_chunk$set(concordance=TRUE)
 
 ## ----message=FALSE, warning=FALSE----------------------------------------
+library(devtools)
+install_github("sangeeuw/factorAnalytics")
+# load the package and its dependencies
 library(factorAnalytics)
 options(digits=3)
 
@@ -93,7 +96,7 @@ methods(class="sfm")
 coef(fit.pca)
 
 # compare returns data with fitted and residual values for CITCRP: fit.pca
-CITCRP.ts <- merge(fit.pca$data[,1], fitted(fit.pca)[,1], 
+CITCRP.ts <- merge(fit.pca$data[,1], fitted(fit.pca)[,1],
                    residuals(fit.pca)[,1])
 colnames(CITCRP.ts) <- c("CITCRP.return","CITCRP.fitted","CITCRP.residual")
 tail(CITCRP.ts)
@@ -114,11 +117,11 @@ plot.zoo(tr.yields, main="Treasury yields", col="royalblue")
 ## ----fig.cap="Treasury yield curve at 3 different dates", fig.width=7, fig.height=4----
 dat <- na.omit(tr.yields) # remove NAs
 time = c(1/12,.25,.5,1, 2, 3, 5, 7, 10, 20, 30)
-plot(time, as.vector(dat[1,]), ylim=c(0,6), type="b", col="royalblue", lwd=2, 
+plot(time, as.vector(dat[1,]), ylim=c(0,6), type="b", col="royalblue", lwd=2,
      pch=19, ylab="Yield", xlab="T")
 lines(time, as.vector(dat[486,]), type="b", lwd=2, col="olivedrab", pch=19)
 lines(time, as.vector(dat[821,]), type="b", lwd=2, col="firebrick", pch=19)
-legend("bottomright", c("07/31/01","07/02/07","10/31/08"), 
+legend("bottomright", c("07/31/01","07/02/07","10/31/08"),
        col=c("royalblue","olivedrab","firebrick"), lwd=2, bty="n")
 
 ## ------------------------------------------------------------------------
@@ -138,23 +141,23 @@ summary(yield.pca)$mimic.sum
 plot(yield.pca, which=3, f.sub=1:3, a.sub=1:11)
 
 ## ----fig.cap="The loadings on the 1st three factors across maturities", fig.width=7, fig.height=4----
-plot(time, beta[,1], ylim=c(-.8,.8), type="b", col="royalblue", lwd=2, pch=19, 
+plot(time, beta[,1], ylim=c(-.8,.8), type="b", col="royalblue", lwd=2, pch=19,
      ylab="Factor loading", xlab="T")
 lines(time, beta[,2], type="b", lwd=2, col="olivedrab", pch=19)
 lines(time, beta[,3], type="b", lwd=2, col="firebrick", pch=19)
-legend("bottomright", c("F.1","F.2","F.3"), 
+legend("bottomright", c("F.1","F.2","F.3"),
        col=c("royalblue","olivedrab","firebrick"), lwd=2, bty="n")
 
 ## ----fig.cap="Effect of a unit change in the first 3 factors on the yield curve: level (shift), slope (tilt) and curvature (bend)", fig.width=7, fig.height=10----
 mu <- colMeans(dat)
 par(mfrow=c(3,1))
 for (i in 1:3) {
-  plot(time, mu, ylim=c(2,5.3), type="b", col="royalblue", lwd=2, pch=19, 
+  plot(time, mu, ylim=c(2,5.3), type="b", col="royalblue", lwd=2, pch=19,
        ylab="Yield", xlab="T")
   lines(time, mu+beta[,i], type="b", lwd=2, lty=2, col="olivedrab", pch=19)
   lines(time, mu-beta[,i], type="b", lwd=2, lty=2, col="firebrick", pch=19)
   legend("bottomright", bty="n",
-         c("mean", paste("mean+F.",i,sep=""), paste("mean-F.",i,sep="")), 
+         c("mean", paste("mean+F.",i,sep=""), paste("mean-F.",i,sep="")),
          col=c("royalblue","olivedrab","firebrick"), lwd=2, lty=c(1,2,2))
 }
 
