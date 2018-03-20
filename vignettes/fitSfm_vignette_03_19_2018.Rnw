@@ -46,9 +46,12 @@ The purpose of this vignette is to demonstrate the use of \code{fitSfm} and rela
 The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. Note that there are plans for further updates to the package before its moved back to R-Forge and gets a CRAN release later this year.
 
 The package can be installed from GitHub using \verb"devtools" as follows.
-<<message=FALSE, warning=FALSE>>=
+<<eval=FALSE>>=
 library(devtools)
 install_github("sangeeuw/factorAnalytics")
+@
+
+<<message=FALSE, warning=FALSE>>=
 # load the package and its dependencies
 library(factorAnalytics)
 options(digits=3)
