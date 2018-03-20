@@ -124,8 +124,7 @@ These and other control parameters are demonstrated in the following sections.
 
 \subsection{Single Factor Model}
 
-
-
+Here's an example of a single factor model using the book-to-market ratio for the 447 stocks in our dataset.
 
 <<>>=
 # Single Factor Model
@@ -133,27 +132,26 @@ fit.single <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
                      date.var="DATE", exposure.vars="BOOK2MARKET")
 @
 
-The resulting object, \code{fit.sector}, has the following attributes.
+The resulting object, \code{fit.single}, has the following attributes.
 <<>>=
 class(fit.single)
 names(fit.single)
 @
 
-The component \code{factor.fit} contains a list of "lm" or "lmRob" objects\footnotemark[1], one for each time period. The estimated factor returns are in \code{factor.returns} and factor exposures from the last time period are in \code{beta}. R-squared and residual variance are in \code{r2} and \code{resid.var} respectively. The estimated factor, residual and asset return covariance matrices are in \code{factor.cov}, \code{resid.cov} and \code{return.cov} respectively. The remaining components contain the input choices and the data.
+The component \code{factor.fit} contains a list of "lm" or "lmRob" objects, one for each time period. The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}. The estimated factor returns are in \code{factor.returns} and factor exposures from the last time period are in \code{beta}. R-squared and residual variance are in \code{r2} and \code{resid.var} respectively. The estimated factor, residual and asset return covariance matrices are in \code{factor.cov}, \code{resid.cov} and \code{return.cov} respectively. The remaining components contain the input choices and the data.
 
-\footnotetext[1]{The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}}
-
+The \code{print} method displays a summary of the $T$ cross-sectional regressions, where $T$ is the number of time periods.
 <<>>=
 # print the fitted "ffm" object
 fit.single
 @
 
-Figure 1 shows the single factor linear fits for the assets. (Plot options are explained later in section 4.)
+Figure 1 shows a scatter plot of residuals, with histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL might be due to a sector/industry factor
 
-<<fig.cap="Single factor model: Asset returns vs Factor Returns">>=
-# plot asset returns vs factor returns for the single factor model
+<<fig.cap="Single factor model: Residual correlations">>=
+# plot residual correlations for the single factor model
 # default is to plot the 1st 6 assets
-plot(fit.single, which=12, f.sub=1)
+plot(fit.single, which=6, f.sub=1)
 @
 
 \subsection{BARRA-type Industry Factor Model}
@@ -182,104 +180,6 @@ plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
 @
 
 \newpage
-\subsection{Market Timing Models}
-
-In the following example, we fit the \citet{henriksson1981market} market timing model, using the SP500 as the market. Market timing accounts for the price movement of the general stock market relative to fixed income securities. The function \code{fitFfmMT}, a wrapper to \code{fitFfm}, includes $down.market = max(0, R_f-R_m)$ as a factor. To test market timing ability, this factor can be added to the single index model as shown below. The coefficient of this down-market factor can be interpreted as the number of "free" put options on the market provided by the manager's market-timings kills. That is, a negative value for the regression estimate would imply a negative value for market timing ability of the manager.
-<<>>=
-# Henriksson-Merton's market timing model
-fit.mktTiming <-  fitFfmMT(asset.names=asset.names, mkt.name="SP500.TR",
-                            rf.name="US.3m.TR", data=managers)
-t(fit.mktTiming$beta)
-fit.mktTiming$r2
-fit.mktTiming$resid.sd
-@
-
-% Similarly, to account for market timing with respect to volatility, one can specify \code{mkt.timing="TM"}. Following \citet{treynor1966can}, $market.sqd = (R_m-R_f)^2$ is added as a factor.
-
-Note that, the user needs to specify which of the columns in \code{data} corresponds to the market returns using argument \code{mkt.name}.
-
-\subsection{Fit methods}
-
-The default fit method is LS regression. The next example performs LS regression using all 3 available factors in the dataset. Notice that the R-squared values have improved considerably when compared to the single index model as well as the market-timing model.
-<<>>=
-fit.ols <- fitFfm(asset.names=asset.names, factor.names=factor.names,
-                   rf.name="US.3m.TR", data=managers)
-fit.ols$beta
-fit.ols$r2
-fit.ols$resid.sd
-@
-
-Other options include discounted least squares (\code{"DLS"}) and robust regression (\code{"Robust"}). DLS is least squares regression using exponentially discounted weights and accounts for time variation in coefficients. Robust regression is resistant to outliers.
-<<>>=
-fit.robust <- fitFfm(asset.names=asset.names, factor.names=factor.names,
-                      rf.name="US.3m.TR", data=managers, fit.method="Robust")
-fit.robust$beta
-fit.robust$r2
-fit.robust$resid.sd
-@
-
-Notice the lower R-squared values and smaller residual volatilities with robust regression. Figures 2 and 3 give a graphical comparison of the fitted returns for asset "HAM3" and residual volatilities from the factor model fits. Figure 2 depicts the smaller influence that the volatility of Jan 2000 has on the robust regression.
-<<fig.cap="HAM3 Returns: LS (top) vs Robust (bottom)", fig.show='hold'>>=
-par(mfrow=c(2,1))
-plot(fit.ols, plot.single=TRUE, which=1, asset.name="HAM3")
-mtext("LS", side=3)
-plot(fit.robust, plot.single=TRUE, which=1, asset.name="HAM3")
-mtext("Robust", side=3)
-@
-
-<<fig.cap="Residual Vol: LS (left) vs Robust (right)", fig.width=3, fig.height=2.5, out.width='.49\\linewidth', fig.show='hold'>>=
-par(mfrow=c(1,2))
-plot(fit.ols, which=5, xlim=c(0,0.045), sub="LS")
-plot(fit.robust, which=5, xlim=c(0,0.045), sub="Robust")
-@
-
-\subsection{Variable Selection}
-
-Though the R-squared values improved by adding more factors in fit.ols (compared to the single index model), one might prefer to employ variable selection methods such as "stepwise", "subsets" or "lars" to avoid over-fitting. The method can be selected via the \code{variable.selection} argument. The default "none", uses all the factors and performs no variable selection.
-
-Specifying "stepwise" selects traditional stepwise\footnotemark[3] LS or robust regression using \code{step} or \code{step.lmRob} respectively. Starting from the given initial set of factors, factors are added (or subtracted) only if the regression fit, as measured by the Bayesian Information Criterion (BIC) or Akaike Information Criterion (AIC)\footnotemark[4], improves.
-
-Specifying "subsets" enables subsets selection using \code{regsubsets}. The best performing subset of any given size or within a range of subset sizes is chosen. Different methods such as exhaustive search (default), forward or backward stepwise, or sequential replacement can be employed.
-
-Finally, "lars" corresponds to least angle regression using \code{lars} with variants "lasso" (default), "lar", "forward.stagewise" or "stepwise".
-
-\footnotetext[3]{The direction for stepwise search can be one of "forward", "backward" or "both". See the help file for more details.}
-
-\footnotetext[4]{AIC is the default. When the additive constant can be chosen so that AIC is equal to Mallows' Cp, this is done. The optional control parameter \code{k} can be used to switch to BIC instead.}
-
-The next example uses the \code{"lars"} variable selection method. The default type and criterion used are \code{"lasso"} and the \code{"Cp"} statistic.
-<<fig.show='hide'>>=
-fit.lars <- fitFfm(asset.names=asset.names, factor.names=factor.names,
-                    data=managers, rf.name="US.3m.TR",
-                    variable.selection="lars")
-fit.lars
-@
-
-\newpage
-Using the same set of factors for comparison, let's fit another model using the \code{"subsets"} variable selection method. Here, the best subset of size 2 for each asset is chosen by specifying $nvmin = nvmax = 2$. Note that when $nvmin < nvmax$, the best subset is chosen from a range of subset sizes $[nvmin, nvmax]$. Default is $nvmin = 1$.
-<<>>=
-(fit.sub <- fitFfm(asset.names=asset.names, factor.names=factor.names,
-                    data=managers, rf.name="US.3m.TR",
-                    variable.selection="subsets", nvmin=2, nvmax=2))
-@
-
-Comparing the coefficients and R-squared values from the two models, we find that the method that uses more factors for an asset have higher R-squared values as expected. However, when both "lars" and "subsets" chose the same number of factors, "lars" fits have a slightly higher R-squared values.
-
-The Figures 4 and 5 display the factor betas from the two fits.
-<<fig.cap="Factor betas: fit.sub", fig.show='hold'>>=
-plot(fit.sub, which=2, f.sub=1:3)
-@
-
-<<fig.cap="Factor betas: fit.lars", fig.show='hold'>>=
-plot(fit.lars, which=2, f.sub=1:3)
-@
-
-Remarks:
-\begin{itemize}
-\item Variable selection methods \code{"stepwise"} and \code{"subsets"} can be combined with any of the fit methods, "LS", "DLS" or "Robust". If variable selection method selected is \code{"lars"}, \code{fit.method} will be ignored.
-\item Refer to the next section on \code{fitFfm control} for more details on the control arguments that can be passed to the different variable selection methods.
-\end{itemize}
-
 \subsection{S3 generic methods}
 
 <<>>=

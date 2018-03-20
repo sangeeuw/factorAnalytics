@@ -175,7 +175,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
     plotData <- merge.xts(x$data[,i], fitted(x)[,i], residuals(x)[,i])
     colnames(plotData) <- c("Actual","Fitted","Residuals")
     Residuals <- na.omit(plotData[,"Residuals"])
-    fit <- x$asset.fit[[i]]
+    fit <- x$factor.fit[[i]]
     resid.sd <- x$resid.sd[i]
     den <- density(Residuals)
     xval <- den$x
@@ -482,9 +482,9 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                )
              },
              "5L" = {
-               ## Residual volatility
+               ## Residual variance
                plot(
-                 barchart(x$resid.sd[a.sub], main="Residual volatility", xlab="", col=colorset[1], ...)
+                 barchart(x$resid.var[a.sub], main="Residual variance", xlab="", col=colorset[1], ...)
                )
              },
              "6L" = {
@@ -535,11 +535,8 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                )
              },
              "12L" ={
-               ## Asset returns vs factor returns (single factor model)
-               if (meth=="Lars") {
-                 stop("This option is not available for 'lars' fits.")
-               }
-               if (length(x$factor.names)>1) {
+               ## Asset returns vs factor exposures (single factor model)
+               if (length(x$factor.names)>2 || (length(x$factor.names)==2 && !("Alpha" %in% x$factor.names))) {
                  stop("Error: This option is only for single factor models.")
                }
                if (length(a.sub) < 5) {
@@ -548,9 +545,16 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                  par(mfrow=c(ceiling(length(a.sub)/2),2))
                }
                for (i in a.sub) {
-                 fit <- x$asset.fit[[i]]
                  asset <- x$asset.names[i]
-                 rawdata <- coredata(merge.xts(x$data[,asset], x$data[,x$factor.names]))
+                 asset.ret <- fitted(x)[,asset]
+                 if (ncol(x$factor.returns)==1) {
+                   factor.ret <- x$factor.returns
+                   a <- 0
+                 } else {
+                   factor.ret <- x$factor.returns[,2]
+                   a <- x$factor.returns[,1]
+                 }
+                 rawdata <- coredata(merge.xts(asset.ret,factor.exp))
                  plot(x=rawdata[,2], y=rawdata[,1], pch=20, main="",
                       xlab=paste(x$factor.names, "Returns"), ylab=paste(asset,"Returns"), ...)
                  coef <- summary(fit)$coefficients

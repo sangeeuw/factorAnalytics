@@ -537,6 +537,10 @@ fitFfm <- function(data, asset.var, ret.var, date.var, exposure.vars,
 
     # exposure matrix B or beta for the last time period - N x K
     beta <- model.matrix(fm.formula, data=subset(data, data[[date.var]]==time.periods[TP]))
+    if (is.vector(beta)) {
+      beta <- as.matrix(beta)
+      colnames(beta) <- factor.names
+    }
     rownames(beta) <- asset.names
     # Shorten the Sector/Country names
     colnames(beta) <- gsub("COUNTRY|SECTOR|GICS.", "", colnames(beta))
@@ -553,6 +557,10 @@ fitFfm <- function(data, asset.var, ret.var, date.var, exposure.vars,
 
     # time series of factor returns = estimated coefficients in each period
     factor.returns <- sapply(reg.list, function(x) {temp <- coef(x); temp[match(factor.names, names(temp))]})
+    if (is.vector(factor.returns)) {
+      factor.returns <- as.matrix(t(factor.returns))
+    }
+
     # simplify factor.names for dummy variables
     if (length (exposures.char)) {
       factor.names <- c(exposures.num, levels(data[,exposures.char]))
@@ -620,7 +628,7 @@ fitFfm <- function(data, asset.var, ret.var, date.var, exposure.vars,
     if(add.intercept) {
       colnames(beta)[1] <- "Alpha"
     }
-    beta <- beta[, colnames(factor.returns)]
+    beta <- beta[, colnames(factor.returns), drop=FALSE]
 
     # If Market+Sector/Country is required
   } else if (add.intercept == TRUE && model.MSCI == FALSE && model.style.only == FALSE) {
