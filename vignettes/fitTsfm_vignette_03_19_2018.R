@@ -2,9 +2,11 @@
 library(knitr)
 opts_chunk$set(concordance=TRUE)
 
+## ----eval=FALSE----------------------------------------------------------
+## library(devtools)
+## install_github("sangeeuw/factorAnalytics")
+
 ## ----message=FALSE, warning=FALSE----------------------------------------
-library(devtools)
-install_github("sangeeuw/factorAnalytics")
 # load the package and its dependencies
 library(factorAnalytics)
 options(digits=3)
