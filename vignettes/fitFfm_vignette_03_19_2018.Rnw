@@ -57,9 +57,7 @@ library(factorAnalytics)
 options(digits=3)
 @
 
-The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code. Sangeetha Srinivasan tested and expanded the functionalities and S3 methods. Doug Martin\footnotemark[1], Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad further added options to model EWMA and GARCH errors, allow for a market + industry and/or sector and/or country model specification, etc.
-
-\footnotetext[1]{Refer to the previous Fundamental factor model vignette for more examples elaborating on these most recent functionalities and reporting functions.}
+The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code. Sangeetha Srinivasan tested and expanded the functionalities and S3 methods. Doug Martin, Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad further added options to model EWMA and GARCH errors, allow for a market + industry and/or sector and/or country model specification, etc. Refer to the previous Fundamental factor model vignette for more examples elaborating on these recent functionalities and reporting functions.
 
 \subsection{Summary of related functions}
 Here's a list of the functions and methods demonstrated in this vignette:
@@ -92,7 +90,7 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \subsection{Data}
 
-The following examples primarily use the \code{Stock.df} dataset. It contains fundamental and monthly return data for 447 stocks listed on the NYSE. This is a balanced dataset - every asset has a complete set of observations for variables in all time periods.
+The following examples primarily use the \code{Stock.df} dataset. It contains fundamental and monthly return data for 447 stocks listed on the NYSE over a 8-year period. The dataset is balanced, i.e., every asset has a complete set of observations for all variables in each time period. Here are some properties of the dataset:
 <<>>=
 # load the dataset into the environment
 data(Stock.df)
@@ -110,7 +108,7 @@ table(stocklist$GICS.SECTOR)
 \newpage
 \section{Fit a fundamental factor model}
 
-A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap). After the factor returns are estimated for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
+A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap for the size factor). After the factor returns are computed for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
 
 Let's take a look at the arguments for \code{fitFfm}.
 
@@ -128,27 +126,17 @@ These and other control parameters are demonstrated in the following sections.
 
 
 
-Figure 1 shows the single factor linear fits for the assets. (Plot options are explained later in section 4.)
 
-<<fig.cap="Single factor model: Asset returns vs Factor Returns">>=
-# plot asset returns vs factor returns for the single factor models
-# default is to plot the 1st 6 assets
-plot(fit.single, which=12, f.sub=1)
-@
-
-\subsection{BARRA-type Industry Factor Model}
-
-A BARRA-type industry (sector) factor model is an example of a fundamental factor model with multiple factors. It is implemented here for the 447 NYSE stocks in our chosen dataset, using the 10 mutually exclusive GICS sector classifications as the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period.
 <<>>=
-# Sector Factor Model
-fit.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
-                     date.var="DATE", exposure.vars="GICS.SECTOR")
+# Single Factor Model
+fit.single <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+                     date.var="DATE", exposure.vars="BOOK2MARKET")
 @
 
 The resulting object, \code{fit.sector}, has the following attributes.
 <<>>=
-class(fit.sector)
-names(fit.sector)
+class(fit.single)
+names(fit.single)
 @
 
 The component \code{factor.fit} contains a list of "lm" or "lmRob" objects\footnotemark[1], one for each time period. The estimated factor returns are in \code{factor.returns} and factor exposures from the last time period are in \code{beta}. R-squared and residual variance are in \code{r2} and \code{resid.var} respectively. The estimated factor, residual and asset return covariance matrices are in \code{factor.cov}, \code{resid.cov} and \code{return.cov} respectively. The remaining components contain the input choices and the data.
@@ -156,22 +144,44 @@ The component \code{factor.fit} contains a list of "lm" or "lmRob" objects\footn
 \footnotetext[1]{The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}}
 
 <<>>=
-# print the fitted "tsfm" object
-fit.sector
+# print the fitted "ffm" object
+fit.single
+@
 
+Figure 1 shows the single factor linear fits for the assets. (Plot options are explained later in section 4.)
+
+<<fig.cap="Single factor model: Asset returns vs Factor Returns">>=
+# plot asset returns vs factor returns for the single factor model
+# default is to plot the 1st 6 assets
+plot(fit.single, which=12, f.sub=1)
+@
+
+\subsection{BARRA-type Industry Factor Model}
+
+A BARRA-type industry (sector) factor model is a fundamental factor model with multiple factors. It is implemented here for the 447 NYSE stocks in our chosen dataset, using the 10 mutually exclusive GICS sector classifications as the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period.
+<<>>=
+# Sector Factor Model
+fit.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+                     date.var="DATE", exposure.vars="GICS.SECTOR")
+@
+
+Let's take a look at the fitted factor model from the last time period (Dec 2003). Materials, Telecomm and the Energy sector had particularly strong returns, with their estimated factor returns over 10\% for that month. Energy stocks rebounded in 2003 from the beating they took in 2002 following the Enron scandal. Telecomm stocks benefited from the increased spending by companies investing in internet-based phone systems etc.
+
+<<>>=
 # print the summary from the last period's fit
 num.periods <- length(fit.sector$time.periods)
 summary(fit.sector$factor.fit[[num.periods]])
 @
 
-Looking at estimated factor returns by sector, we observe that the "Information Technology" sector had the highest average return (not suprising, given this dataset covers a significant part of the dot-com bubble). Figure 2 shows the distribution of estimated factor returns, sorted by descending order of their mean.
+Figure 2 shows the distribution of estimated factor returns, sorted by descending order of their mean. We observe that the "Information Technology" sector had the highest average return (not suprising, given this dataset covers a significant part of the dot-com bubble).
 
-<<fig.cap="Sector model: Asset returns vs Factor Returns">>=
+<<fig.cap="Sector model: Distribution of Factor Returns">>=
 # plot distribution of factor returns by sector sorted by means
 plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
      sort.by="mean")
 @
 
+\newpage
 \subsection{Market Timing Models}
 
 In the following example, we fit the \citet{henriksson1981market} market timing model, using the SP500 as the market. Market timing accounts for the price movement of the general stock market relative to fixed income securities. The function \code{fitFfmMT}, a wrapper to \code{fitFfm}, includes $down.market = max(0, R_f-R_m)$ as a factor. To test market timing ability, this factor can be added to the single index model as shown below. The coefficient of this down-market factor can be interpreted as the number of "free" put options on the market provided by the manager's market-timings kills. That is, a negative value for the regression estimate would imply a negative value for market timing ability of the manager.
@@ -270,38 +280,16 @@ Remarks:
 \item Refer to the next section on \code{fitFfm control} for more details on the control arguments that can be passed to the different variable selection methods.
 \end{itemize}
 
-\subsection{fitFfm control}
-
-Since \code{fitFfm} calls many different regression fitting and variable selection methods, it made sense to collect all the optional controls for these functions and process them via \code{fitFfm.control}. This function is meant to be used internally by \code{fitFfm} when arguments are passed to it via the ellipsis. The use of control parameters was demonstrated with \code{nvmax} and \code{nvmin} in the fit.sub example earlier.
-
-For easy reference, here's a classified list of control parameters accepted and passed by \code{fitFfm} to their respective model fitting (or) model selection functions in other packages. See the corresponding help files for more details on each parameter.
-\begin{itemize}
-\item \verb"lm": "weights","model","x","y","qr"
-\item \verb"lmRob": "weights","model","x","y","nrep","efficiency","mxr","mxf","mxs","trace"
-\item \verb"step": "scope","scale","direction","trace","steps","k"
-\item \verb"regsubsets": "weights","nvmax","force.in","force.out","method","really.big"
-\item \verb"lars": "type","normalize","eps","max.steps","trace"
-\item \verb"cv.lars": "K","type","normalize","eps","max.steps","trace"
-\end{itemize}
-
-There are 3 other significant arguments that can be passed through the \code{...} argument to \code{fitFfm}.
-\begin{itemize}
-\item \verb"decay": Determines the decay factor for DLS fit method, which corresponds to exponentially weighted least squares, with weights adding to unity.
-\item \verb"nvmin": The lower limit for the range of subset sizes from which the best model (BIC) is found when performing "subsets" selection. Note that the upper limit was already passed to \code{regsubsets} function. By specifying \code{nvmin=nvmax}, users can obtain the best model of a particular size (meaningful to those who want a parsimonious model, or to compare with a different model of the same size, or perhaps to avoid over-fitting/ data dredging etc.).
-\item \verb"lars.criterion": An option (one of "Cp" or "cv") to assess model selection for the \code{"lars"} variable selection method. "Cp" is Mallow's Cp statistic and "cv" is K-fold cross-validated mean squared prediction error.
-\end{itemize}
-
-\newpage
 \subsection{S3 generic methods}
 
 <<>>=
-methods(class="tsfm")
+methods(class="ffm")
 @
 
-Many useful generic accessor functions are available for "tsfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the component of asset returns not explained by the factor model.
+Many useful generic accessor functions are available for "ffm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the component of asset returns not explained by the factor model.
 \code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
 
-\code{summary()} prints standard errors and t-statistics for all estimated coefficients in addition to R-squared values and residual volatilities. Argument \code{se.type}, one of "Default", "HC" or "HAC", allows for heteroskedasticity and auto-correlation consistent estimates and standard errors whenever possible. A "summary.tsfm" object is returned which contains a list of summary objects returned by "lm", "lm.Rob" or "lars" for each asset fit.
+\code{summary()} prints standard errors and t-statistics for all estimated coefficients in addition to R-squared values and residual volatilities. Argument \code{se.type}, one of "Default", "HC" or "HAC", allows for heteroskedasticity and auto-correlation consistent estimates and standard errors whenever possible. A "summary.ffm" object is returned which contains a list of summary objects returned by "lm", "lm.Rob" or "lars" for each asset fit.
 
 Note: Standard errors are currently not available for the "lars" variable selection method, as there seems to be no consensus on a statistically valid method of calculating standard errors for the lasso predictions.
 
@@ -438,9 +426,9 @@ plot(fit.sub, which=10, f.sub=1:3)
 
 \section{Plot}
 
-Some types of individual asset (Figure 2) and group plots (Figures 1, 3-9) have already been demonstrated. Let's take a look at all available arguments for plotting a "tsfm" object.
+Some types of individual asset (Figure 2) and group plots (Figures 1, 3-9) have already been demonstrated. Let's take a look at all available arguments for plotting a "ffm" object.
 <<eval=FALSE>>=
-## S3 method for class "tsfm"
+## S3 method for class "ffm"
 plot (x, which=NULL, f.sub=1:2, a.sub=1:6, plot.single=FALSE, asset.name,
       colorset=c("royalblue","dimgray","olivedrab","firebrick",
                  "goldenrod","mediumorchid","deepskyblue","chocolate",
@@ -450,7 +438,7 @@ plot (x, which=NULL, f.sub=1:2, a.sub=1:6, plot.single=FALSE, asset.name,
 
 \subsection{Group plots}
 
-This is the default option for plotting. Simply running \code{plot(fit)}, where \code{fit} is any "tsfm" object, will bring up a menu (shown below) for group plots.
+This is the default option for plotting. Simply running \code{plot(fit)}, where \code{fit} is any "ffm" object, will bring up a menu (shown below) for group plots.
 <<eval=FALSE, results='hide'>>=
 plot(fit.sub)
 
@@ -495,7 +483,7 @@ If the plot type argument \code{which} is not specified, a menu prompts for user
 \newpage
 \subsection{Individual plots}
 
-Setting \code{plot.single=TRUE} enables individual asset plots. If there is more than one asset fit by the fitted object \code{x}, \code{asset.name} is also necessary. In case the \code{tsfm} object \code{x} contains only a single asset's fit, plot.tsfm can infer \code{asset.name} without user input.
+Setting \code{plot.single=TRUE} enables individual asset plots. If there is more than one asset fit by the fitted object \code{x}, \code{asset.name} is also necessary. In case the \code{ffm} object \code{x} contains only a single asset's fit, plot.ffm can infer \code{asset.name} without user input.
 
 Here's the individual plot menu.
 <<eval=FALSE, results='hide'>>=
