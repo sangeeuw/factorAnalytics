@@ -46,15 +46,20 @@ The purpose of this vignette is to demonstrate the use of \code{fitFfm} and rela
 The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. Note that there are plans for further updates to the package before its moved back to R-Forge and gets a CRAN release later this year.
 
 The package can be installed from GitHub using \verb"devtools" as follows.
-<<message=FALSE, warning=FALSE>>=
+<<eval=FALSE>>=
 library(devtools)
 install_github("sangeeuw/factorAnalytics")
+@
+
+<<message=FALSE, warning=FALSE>>=
 # load the package and its dependencies
 library(factorAnalytics)
 options(digits=3)
 @
 
-The focus of this vignette is on the \code{fitFfm} function and related functionalities. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code. Sangeetha Srinivasan tested, and expanded the functionalities and S3 methods. Avinash Acharya and Chindhanai Uthaisaad further added new functionalities such as EWMA and GARCH errors, allowing for a market + industry model specification etc.
+The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code. Sangeetha Srinivasan tested and expanded the functionalities and S3 methods. Doug Martin\footnotemark[1], Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad further added options to model EWMA and GARCH errors, allow for a market + industry and/or sector and/or country model specification, etc.
+
+\footnotetext[1]{Refer to the previous Fundamental factor model vignette for more examples elaborating on these most recent functionalities and reporting functions.}
 
 \subsection{Summary of related functions}
 Here's a list of the functions and methods demonstrated in this vignette:
@@ -119,9 +124,21 @@ The default model fitting method is ordinary least squares (LS) regression, with
 
 These and other control parameters are demonstrated in the following sections.
 
+\subsection{Single Factor Model}
+
+
+
+Figure 1 shows the single factor linear fits for the assets. (Plot options are explained later in section 4.)
+
+<<fig.cap="Single factor model: Asset returns vs Factor Returns">>=
+# plot asset returns vs factor returns for the single factor models
+# default is to plot the 1st 6 assets
+plot(fit.single, which=12, f.sub=1)
+@
+
 \subsection{BARRA-type Industry Factor Model}
 
-Here's an implementation of a stylized BARRA-type industry (sector) factor model for the 447 NYSE stocks described in section 1.3 earlier. Note that there are 10 mutually exclusive GICS sector classifications in any given time period.
+A BARRA-type industry (sector) factor model is an example of a fundamental factor model with multiple factors. It is implemented here for the 447 NYSE stocks in our chosen dataset, using the 10 mutually exclusive GICS sector classifications as the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period.
 <<>>=
 # Sector Factor Model
 fit.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
@@ -139,16 +156,20 @@ The component \code{factor.fit} contains a list of "lm" or "lmRob" objects\footn
 \footnotetext[1]{The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}}
 
 <<>>=
-fit.sector # print the fitted "tsfm" object
+# print the fitted "tsfm" object
+fit.sector
+
+# print the summary from the last period's fit
+num.periods <- length(fit.sector$time.periods)
+summary(fit.sector$factor.fit[[num.periods]])
 @
 
-Looking at the estimated factor returns by sector, we note that the "Information Technology" sector had the highest average return (not suprising given the historical period covers most of the dot-com bubble).
-
-Figure 1 shows the single factor linear fits for the assets. (Plot options are explained later in section 4.)
+Looking at estimated factor returns by sector, we observe that the "Information Technology" sector had the highest average return (not suprising, given this dataset covers a significant part of the dot-com bubble). Figure 2 shows the distribution of estimated factor returns, sorted by descending order of their mean.
 
 <<fig.cap="Sector model: Asset returns vs Factor Returns">>=
-# plot asset returns vs factor returns for the single factor models
-plot(fit.singleIndex, which=12, f.sub=1)
+# plot distribution of factor returns by sector sorted by means
+plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
+     sort.by="mean")
 @
 
 \subsection{Market Timing Models}

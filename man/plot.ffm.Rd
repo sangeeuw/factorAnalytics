@@ -5,10 +5,10 @@
 \title{Plots from a fitted fundamental factor model}
 \usage{
 \method{plot}{ffm}(x, which = NULL, f.sub = 1:2, a.sub = 1:6,
-  plot.single = FALSE, asset.name, colorset = c("royalblue", "dimgray",
-  "olivedrab", "firebrick", "goldenrod", "mediumorchid", "deepskyblue",
-  "chocolate", "darkslategray"), legend.loc = "topleft", las = 1, lwd = 2,
-  maxlag = 15, ...)
+  plot.single = FALSE, asset.name, use.date = NULL,
+  colorset = c("royalblue", "dimgray", "olivedrab", "firebrick", "goldenrod",
+  "mediumorchid", "deepskyblue", "chocolate", "darkslategray"),
+  legend.loc = "topleft", las = 1, lwd = 2, maxlag = 15, ...)
 }
 \arguments{
 \item{x}{an object of class \code{ffm} produced by \code{fitFfm}.}
@@ -17,18 +17,20 @@
 required, specify a subset from 1:12 for group plots and 1:19 for individual
 plots. If \code{which=NULL} (default), the following menu appears: \cr \cr
 For plots of a group of assets: \cr
-1 = Factor model coefficients: Alpha, \cr
-2 = Factor model coefficients: Betas, \cr
+1 = Distribution of factor returns, \cr
+2 = Factor exposures from the last period, \cr
 3 = Actual and fitted, \cr
 4 = R-squared, \cr
-5 = Residual volatility,\cr
+5 = Residual variance, x \cr
 6 = Scatterplot matrix of residuals, with histograms, density overlays, correlations and significance stars, \cr
 7 = Factor model residual correlation \cr
 8 = Factor model return correlation,\cr
 9 = Factor contribution to SD,\cr
 10 = Factor contribution to ES,\cr
 11 = Factor contribution to VaR, \cr
-12 = Asset returns vs factor returns (single factor model) \cr \cr
+12 = Asset returns vs factor returns (single factor model) \cr
+13 = Time series of factor returns, \cr
+14 = Time series of style factor exposures, \cr \cr
 For individual asset plots:\cr
 1 = Actual and fitted,\cr
 2 = Actual vs fitted,\cr
@@ -62,6 +64,11 @@ individual asset's factor model. The type of plot is given by
 
 \item{asset.name}{name of the individual asset to be plotted. Is necessary
 if \code{x} contains multiple asset fits and \code{plot.single=TRUE}.}
+
+\item{use.date}{character; unique date used to reference factor exposures.
+Should be coercible to class \code{Date} and match one of the dates in the
+data used in the fitted \code{object}. Default is NULL; uses the last period
+factor exposures.}
 
 \item{colorset}{color palette to use for all the plots. The 1st element will
 be used for individual time series plots or the 1st object plotted, the 2nd
@@ -157,7 +164,8 @@ I(13) - \code{\link[PerformanceAnalytics]{chart.Histogram}},
 I(14) - \code{\link[PerformanceAnalytics]{chart.QQPlot}},
 I(15,16,17) - \code{\link[strucchange]{plot.efp}},
 I(18) - \code{\link[zoo]{plot.zoo}},
-G(1,2,4,5,9,10,11) - \code{\link[lattice]{barchart}},
+G(1) - \code{\link[PerformanceAnalytics]{chart.Boxplot}},
+G(2,4,5,9,10,11) - \code{\link[lattice]{barchart}},
 G(6) - \code{\link[PerformanceAnalytics]{chart.Correlation}} and
 G(7,8) - \code{\link[corrplot]{corrplot.mixed}}.
 }

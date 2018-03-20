@@ -39,18 +39,20 @@
 #' required, specify a subset from 1:12 for group plots and 1:19 for individual
 #' plots. If \code{which=NULL} (default), the following menu appears: \cr \cr
 #' For plots of a group of assets: \cr
-#' 1 = Factor model coefficients: Alpha, \cr
-#' 2 = Factor model coefficients: Betas, \cr
+#' 1 = Distribution of factor returns, \cr
+#' 2 = Factor exposures from the last period, \cr
 #' 3 = Actual and fitted, \cr
 #' 4 = R-squared, \cr
-#' 5 = Residual volatility,\cr
+#' 5 = Residual variance, x \cr
 #' 6 = Scatterplot matrix of residuals, with histograms, density overlays, correlations and significance stars, \cr
 #' 7 = Factor model residual correlation \cr
 #' 8 = Factor model return correlation,\cr
 #' 9 = Factor contribution to SD,\cr
 #' 10 = Factor contribution to ES,\cr
 #' 11 = Factor contribution to VaR, \cr
-#' 12 = Asset returns vs factor returns (single factor model) \cr \cr
+#' 12 = Asset returns vs factor returns (single factor model) \cr
+#' 13 = Time series of factor returns, \cr
+#' 14 = Time series of style factor exposures, \cr \cr
 #' For individual asset plots:\cr
 #' 1 = Actual and fitted,\cr
 #' 2 = Actual vs fitted,\cr
@@ -80,6 +82,10 @@
 #' \code{which}. Default is \code{FALSE}.
 #' @param asset.name name of the individual asset to be plotted. Is necessary
 #' if \code{x} contains multiple asset fits and \code{plot.single=TRUE}.
+#' @param use.date character; unique date used to reference factor exposures.
+#' Should be coercible to class \code{Date} and match one of the dates in the
+#' data used in the fitted \code{object}. Default is NULL; uses the last period
+#' factor exposures.
 #' @param colorset color palette to use for all the plots. The 1st element will
 #' be used for individual time series plots or the 1st object plotted, the 2nd
 #' element for the 2nd object in the plot and so on.
@@ -111,7 +117,8 @@
 #' I(14) - \code{\link[PerformanceAnalytics]{chart.QQPlot}},
 #' I(15,16,17) - \code{\link[strucchange]{plot.efp}},
 #' I(18) - \code{\link[zoo]{plot.zoo}},
-#' G(1,2,4,5,9,10,11) - \code{\link[lattice]{barchart}},
+#' G(1) - \code{\link[PerformanceAnalytics]{chart.Boxplot}},
+#' G(2,4,5,9,10,11) - \code{\link[lattice]{barchart}},
 #' G(6) - \code{\link[PerformanceAnalytics]{chart.Correlation}} and
 #' G(7,8) - \code{\link[corrplot]{corrplot.mixed}}.
 #'
@@ -143,7 +150,7 @@
 #' @export
 
 plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
-                      plot.single=FALSE, asset.name,
+                      plot.single=FALSE, asset.name, use.date=NULL,
                       colorset=c("royalblue","dimgray","olivedrab","firebrick",
                                  "goldenrod","mediumorchid","deepskyblue",
                                  "chocolate","darkslategray"),
@@ -152,8 +159,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
   which.vec <- which
   which <- which[1]
 
-  meth <- x$fit.method # one of "LS", "DLS" or "Robust"
-  if (is.null(meth)) {meth <- "Lars"}
+  meth <- x$fit.method # one of "LS", "WLS", "Rob" or "W-Rob"
 
   if (plot.single==TRUE) {
 
@@ -413,18 +419,20 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
     repeat {
       if (is.null(which)) {
         which <-
-          menu(c("Factor model coefficients: Alpha",
-                 "Factor model coefficients: Betas",
+          menu(c("Distribution of factor returns",
+                 "Factor exposures from the last period",
                  "Actual and Fitted asset returns",
                  "R-squared",
-                 "Residual Volatility",
+                 "Residual variance",
                  "Scatterplot matrix of residuals, with histograms, density overlays, correlations and significance stars",
                  "Factor Model Residual Correlation",
                  "Factor Model Return Correlation",
                  "Factor Contribution to SD",
                  "Factor Contribution to ES",
                  "Factor Contribution to VaR",
-                 "Asset returns vs factor returns (single factor model)"),
+                 "Asset returns vs factor returns (single factor model)",
+                 "Time series of factor returns",
+                 "Time series of style factor exposures"),
                title="\nMake a plot selection (or 0 to exit):")
       }
 
@@ -432,13 +440,15 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
 
       switch(which,
              "1L" = {
-               ## Factor model coefficients: Alpha
-               plot(
-                 barchart(as.matrix(x$alpha)[a.sub,], main="Factor model Alpha (Intercept)", xlab="", col=colorset[1], ...)
-               )
+               ## Distribution of factor returns
+               main <- "Distribution of factor returns"
+               chart.Boxplot(x$factor.returns[,f.sub], colorset=colorset,
+                             lwd=lwd, main=main, xlab="Factor returns", ylab="",
+                             legend.loc=legend.loc, pch=NULL, las=las, ...)
              },
              "2L" = {
-               ## Factor model coefficients: Betas
+               ## Factor exposures from the given date
+               main <- "Factor exposures from the given date"
                C <- x$beta[a.sub,f.sub,drop=FALSE]
                Y <- row(C, as.factor=T)
                X <- as.vector(as.matrix(C[,,drop=FALSE]))
@@ -457,7 +467,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                }
                for (i in a.sub) {
                  asset <- x$asset.names[i]
-                 plotData <- merge.xts(x$data[,asset], fitted(x)[,asset])
+                 plotData <- merge.xts(x$data[,x$ret.var], fitted(x)[,asset])
                  colnames(plotData) <- c("Actual","Fitted")
                  main <- paste("Actual and Fitted:", asset)
                  chart.TimeSeries(plotData, colorset=colorset, lwd=lwd, main=main, xlab="",
