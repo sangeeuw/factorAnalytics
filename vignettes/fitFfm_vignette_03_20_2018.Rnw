@@ -146,12 +146,14 @@ The \code{print} method displays a summary of the $T$ cross-sectional regression
 fit.single
 @
 
-Figure 1 shows a scatter plot of residuals, with histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL might be due to a sector/industry factor
+Figure 1 shows a scatter plot of residuals, with histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL; this might be due to their exposure to a common sector/industry risk factor for "Software & Services".
 
-<<fig.cap="Single factor model: Residual correlations">>=
+<<fig.cap="Single factor model: Residual correlations", warning=FALSE>>=
 # plot residual correlations for the single factor model
 # default is to plot the 1st 6 assets
 plot(fit.single, which=6, f.sub=1)
+# GICS industry/sector classification (1st 6 stocks; last time period)
+subset(stock,DATE=="2003-12-31")[1:6,c("TICKER","GICS.INDUSTRY","GICS.SECTOR")]
 @
 
 \subsection{BARRA-type Industry Factor Model}
