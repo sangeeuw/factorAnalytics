@@ -43,7 +43,7 @@ The purpose of this vignette is to demonstrate the use of \code{fitFfm} and rela
 
 \subsection{Load Package}
 
-The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. Note that there are plans for further updates to the package before its moved back to R-Forge and gets a CRAN release later this year.
+The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. There are plans for further updates to the package before its moved back to R-Forge and released on CRAN later this year.
 
 The package can be installed from GitHub using \verb"devtools" as follows.
 <<eval=FALSE>>=
@@ -57,14 +57,14 @@ library(factorAnalytics)
 options(digits=3)
 @
 
-The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code. Sangeetha Srinivasan tested and expanded the functionalities and S3 methods. Doug Martin, Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad further added options to model EWMA and GARCH errors, allow for a market + industry and/or sector and/or country model specification, etc. Refer to the previous Fundamental factor model vignette for more examples elaborating on these recent functionalities and reporting functions.
+The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code as part of Google Summer of Code (GSOC) 2013 . Sangeetha Srinivasan tested and expanded the functionalities and S3 methods as part of GSOC in 2014 and 2015. Doug Martin, Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad added options to fit EWMA or GARCH model for errors, enabled a market + industry and/or sector and/or country model specification, etc. as part of GSOC 2016 and 2017. Refer to the other fundamental factor model vignette by Avinash Acharya for more examples elaborating on these recent functionalities and reporting functions.
 
 \subsection{Summary of related functions}
 Here's a list of the functions and methods demonstrated in this vignette:
 
 \begin{itemize}
 
-\item \verb"fitFfm(data, asset.var, ret.var, date.var, exposure.vars, weight.var, " \\ \verb"fit.method, rob.stats, full.resid.cov, z.score, add.intercept, lag.exposures, " \\ \verb"resid.scale.type, lambda, GARCH.params, GARCH.MLE, std.return, analysis, " \\ \verb"target.vol, ...)": Fits a fundamental factor model for one or more asset returns or excess returns using $T$ cross-sectional regressions a.k.a. the "BARRA" approach (detailed in \citet{grinold2000active}), where $T$ is the number of time periods. Least squares (LS), weighted least squares (WLS), robust (rob) and weighted-robust regression (W-Rob) fitting are possible. Options for computing residual variances include sample variance, EWMA, Robust EWMA and GARCH(1,1). An object of class "ffm" containing the fitted objects, factor exposures, factor returns, R-squared, residual volatility, etc. is returned.
+\item \verb"fitFfm(data, asset.var, ret.var, date.var, exposure.vars, weight.var, " \\ \verb"fit.method, rob.stats, full.resid.cov, z.score, add.intercept, lag.exposures, " \\ \verb"resid.scale.type, lambda, GARCH.params, GARCH.MLE, std.return, analysis, " \\ \verb"target.vol, ...)": Fits a fundamental factor model for one or more asset returns or excess returns using $T$ cross-sectional regressions a.k.a. the "BARRA" approach (detailed in \citet{grinold2000active}), where $T$ is the number of time periods. Available fit methods include Least squares (LS), weighted least squares (WLS), robust (rob) and weighted-robust regression (W-Rob). Options for computing residual variances include sample variance, EWMA, Robust EWMA and GARCH(1,1). An object of class "ffm" containing the fitted objects, factor exposures, factor returns, R-squared, residual volatility, etc. is returned. A more detailed description is provided in Section 2.
 
 \item \verb"coef(object, ...)": Returns a data.frame containing the coefficients (intercept and factor exposures) for the last time period for all assets.
 
@@ -82,7 +82,7 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \item \verb"plot(x)": The \code{plot} method for class "ffm" can be used for plotting factor model characteristics of a group of assets (default) or an individual asset. The user can select the type of plot either from the menu prompt or directly via argument \code{which}. In case multiple plots are needed, the menu is repeated after each plot (enter 0 to exit). User can also input a numeric vector of plot options via \code{which}.
 
-\item \verb"predict(object, newdata, pred.date, ...)": The \code{predict} method for class "ffm" returns a vector or matrix of predicted values for a new data sample or simulated values. \code{pred.date} allows user to choose a date, and hence the estimated factor exposures from that date to be used in the prediction.
+\item \verb"predict(object, newdata, pred.date, ...)": The \code{predict} method for class "ffm" returns a vector or matrix of predicted returns for new or simulated values of the fundamental characteristics. \code{pred.date} allows user to choose the relevant date for the estimated factor exposures to be used in the prediction.
 
 \item \verb"summary(object, ...)": The \code{summary} method for class "ffm" returns an object of class \code{"summary.ffm"} containing the summaries of the fitted objects. Printing the factor model summary object outputs the call, estimated factor returns, r-squared and residual volatility for each time period.
 
@@ -90,7 +90,9 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \subsection{Data}
 
-The following examples primarily use the \code{Stock.df} dataset. It contains fundamental and monthly return data for 447 stocks listed on the NYSE over a 8-year period. The dataset is balanced, i.e., every asset has a complete set of observations for all variables in each time period. Here are some properties of the dataset:
+The following examples primarily use the \code{Stock.df} dataset. It contains fundamental and monthly return data for 447 stocks listed on the NYSE over a 8-year period. The dataset is balanced, i.e., every asset has a complete set of observations for all variables in each time period.
+
+The following queries help understand key aspects of the dataset:
 <<>>=
 # load the dataset into the environment
 data(Stock.df)
@@ -108,7 +110,9 @@ table(stocklist$GICS.SECTOR)
 \newpage
 \section{Fit a fundamental factor model}
 
-A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap for the size factor). After the factor returns are computed for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
+A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. Chapter 15 from \citet{zivot2006modeling} serves as a good reference for a description of the different multi-factor models, estimation methods and relevant examples using S-PLUS.
+
+There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. Due to cross-sectional heteroskedasticity of asset returns, ordinary least squares (OLS) estimation of the factor returns is inefficient. Inverse of the estimated residual variances are used as weights for a weighted least squares regression to get efficient estimates. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap for the size factor). After the factor returns are computed for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
 
 Let's take a look at the arguments for \code{fitFfm}.
 
@@ -118,13 +122,13 @@ args(fitFfm)
 
 The default model fitting method is ordinary least squares (LS) regression, with the option to choose robust regression (Rob), weighted least squares (WLS) or weighted robust regression (W-Rob). The different model fitting options are demonstrated in the following sections. If weighted regression (WLS or W-Rob) is chosen, inverse of the residual variances are used as weights. \code{resid.scale.type} allows the user to choose the method for computing residual variances - sample variance, EWMA, Robust EWMA and GARCH(1,1).
 
-\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. User can also choose to weight the factor exposures by some characteristic (ex: market cap) via \code{weight.var}. \code{add.intercept} gives the option to add an intercept term for fitting a Market + Sector or a Market + Sector + Country model. Note that these models can also include other style factors. \code{lag.exposures} gives the option to use lag the factor exposures by one time period. \code{full.resid.cov} provides the option to choose between a diagonal vs. full residual covariance matrix. And, \code{rob.stats} allows for robust estimates of covariance, correlation, location and univariate scale.
+\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. \code{weight.var} allows the user to give higher weight to some assets when estimating factor exposures; for example using the market cap of stocks as their weights. \code{add.intercept} gives the option to add an intercept term for fitting a Market + Sector or a Market + Sector + Country model. These models can simultaneously include other style factors. \code{lag.exposures} gives the option to use lag the factor exposures by one time period. \code{full.resid.cov} provides the option to choose between a diagonal vs. full residual covariance matrix. And, \code{rob.stats} allows for robust estimates of covariance, correlation, location and univariate scale.
 
 These and other control parameters are demonstrated in the following sections.
 
 \subsection{Single Factor Model}
 
-Here's an example of a single factor model using the book-to-market ratio for the 447 stocks in our dataset.
+Here's an example of a single factor model using the book-to-market ratio, which is a proxy for the value factor, as the explanatory variable for the returns of 447 stocks in the dataset.
 
 <<>>=
 # Single Factor Model
@@ -138,7 +142,7 @@ class(fit.single)
 names(fit.single)
 @
 
-The component \code{factor.fit} contains a list of "lm" or "lmRob" objects, one for each time period. The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}. The estimated factor returns are in \code{factor.returns} and factor exposures from the last time period are in \code{beta}. R-squared and residual variance are in \code{r2} and \code{resid.var} respectively. The estimated factor, residual and asset return covariance matrices are in \code{factor.cov}, \code{resid.cov} and \code{return.cov} respectively. The remaining components contain the input choices and the data.
+The component \code{factor.fit} contains a list of "lm" or "lmRob" objects, one for each time period. The fitted objects is of class "lm" if \code{fit.method="LS" or "WLS"}, or class "lmRob", if \code{fit.method="Rob" or "W-Rob"}. The component \code{factor.returns} contains the estimated factor returns and \code{beta} contains the factor exposures from the last time period. While, \code{r2} and \code{resid.var} denote the regression R-squared and estimated residual variance respectively. The estimated covariance matrices of factor returns, residuals and asset returns are given by \code{factor.cov}, \code{resid.cov} and \code{return.cov} respectively. The remaining components contain the input choices and the data.
 
 The \code{print} method displays a summary of the $T$ cross-sectional regressions, where $T$ is the number of time periods.
 <<>>=
@@ -146,26 +150,28 @@ The \code{print} method displays a summary of the $T$ cross-sectional regression
 fit.single
 @
 
-Figure 1 shows a scatter plot of residuals, with histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL; this might be due to their exposure to a common sector/industry risk factor for "Software & Services".
+Figure 1 shows a scatter plot of residuals for the 1st 6 stocks in the last time period, including histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL; this might be due to their exposure to other omitted factors such as a sector/industry risk factor for "Software \& Services".
 
-<<fig.cap="Single factor model: Residual correlations", warning=FALSE>>=
+<<fig.cap="Single factor model: Residual correlations", warning=FALSE, fig.show='asis', fig.width=5.5, fig.height=5.5>>=
 # plot residual correlations for the single factor model
 # default is to plot the 1st 6 assets
 plot(fit.single, which=6, f.sub=1)
-# GICS industry/sector classification (1st 6 stocks; last time period)
-subset(stock,DATE=="2003-12-31")[1:6,c("TICKER","GICS.INDUSTRY","GICS.SECTOR")]
+# GICS industry/sector classification (1st 6 stocks; penultimate time period)
+subset(stock,DATE=="2003-11-28")[1:6,c("TICKER","GICS.INDUSTRY","GICS.SECTOR")]
 @
 
 \subsection{BARRA-type Industry Factor Model}
 
-A BARRA-type industry (sector) factor model is a fundamental factor model with multiple factors. It is implemented here for the 447 NYSE stocks in our chosen dataset, using the 10 mutually exclusive GICS sector classifications as the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period.
+A BARRA-type industry (sector) factor model is a fundamental factor model with multiple factors. It is implemented here for the 447 NYSE stocks in our dataset, using the 10 mutually exclusive GICS sector classifications as the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period.
 <<>>=
 # Sector Factor Model
 fit.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
                      date.var="DATE", exposure.vars="GICS.SECTOR")
 @
 
-Let's take a look at the fitted factor model from the last time period (Dec 2003). Materials, Telecomm and the Energy sector had particularly strong returns, with their estimated factor returns over 10\% for that month. Energy stocks rebounded in 2003 from the beating they took in 2002 following the Enron scandal. Telecomm stocks benefited from the increased spending by companies investing in internet-based phone systems etc.
+Let's take a look at the fitted factor model from the last period in the data. Energy, Materials and Telecomm sectors had particularly strong returns, with estimated factor returns over 10\% for that month\footnotemark[1].
+
+\footnotetext[1]{Energy stocks rebounded in 2003 from the beating they took in 2002 following the Enron scandal. Telecomm stocks benefited from the increased spending by companies investing in internet-based phone systems during this period.}
 
 <<>>=
 # print the summary from the last period's fit
@@ -173,9 +179,9 @@ num.periods <- length(fit.sector$time.periods)
 summary(fit.sector$factor.fit[[num.periods]])
 @
 
-Figure 2 shows the distribution of estimated factor returns, sorted by descending order of their mean. We observe that the "Information Technology" sector had the highest average return (not suprising, given this dataset covers a significant part of the dot-com bubble).
+Figure 2 shows the distribution of estimated monthly sector returns (from 1996 - 2003) in descending order of their mean. We find that the "Information Technology" sector had the highest average return (not suprising, given this dataset covers a significant part of the dot-com bubble).
 
-<<fig.cap="Sector model: Distribution of Factor Returns">>=
+<<fig.cap="Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=6, fig.height=4.5>>=
 # plot distribution of factor returns by sector sorted by means
 plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
      sort.by="mean")

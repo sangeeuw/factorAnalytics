@@ -68,7 +68,7 @@ fit.apca <- fitSfm(r.W, k=15)
 ## ----fig.cap="Screeplot of eigenvalues: fit.apca",fig.width=7,fig.height=4.5----
 plot(fit.apca, which=1, eig.max=0.4, las=2)
 
-## ----fig.cap="First four factor returns: fit.apca", fig.width=7,fig.height=6----
+## ----fig.cap="First four factor returns: fit.apca", fig.width=7,fig.height=5.5----
 plot(fit.apca, f.sub=1:4, which=2)
 
 ## ------------------------------------------------------------------------

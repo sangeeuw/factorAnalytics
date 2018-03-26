@@ -112,12 +112,12 @@ tail(HAM1.ts)
 # summary for fit.sub computing HAC standard erros
 summary(fit.sub, se.type="HAC")
 
-## ----fig.cap="Factor model return correlation (pairwise complete obs)"----
+## ----fig.cap="Factor model return correlation (pairwise complete obs)", fig.show='asis', fig.width=5, fig.height=5----
 fmCov(fit.sub)
 # factor model return correlation plot
 plot(fit.sub, which=8)
 
-## ----fig.cap="Percentage factor contribution to SD"----------------------
+## ----fig.cap="Percentage factor contribution to SD", fig.show='asis', fig.width=5, fig.height=5----
 decomp <- fmSdDecomp(fit.sub)
 names(decomp)
 # get the factor model standard deviation for all assets
@@ -131,7 +131,7 @@ decomp$pcSd
 # plot the percentage component contributions to Sd
 plot(fit.sub, which=9, f.sub=1:3)
 
-## ----fig.cap="Percentage factor contribution to VaR"---------------------
+## ----fig.cap="Percentage factor contribution to VaR", fig.show='asis', fig.width=5, fig.height=5----
 # factor model VaR decomp using estimated factor return covariance (default)
 # using tail probability = 10% (default = 5%)
 decomp1 <- fmVaRDecomp(fit.sub, p=0.10)
@@ -143,7 +143,7 @@ decomp1$pcVaR
 # plot the percentage component contributions to VaR
 plot(fit.sub, which=11, f.sub=1:3)
 
-## ----fig.cap="Percentage factor contribution to ES"----------------------
+## ----fig.cap="Percentage factor contribution to ES", fig.show='asis', fig.width=5, fig.height=5----
 # using normal distr. for computing ES (default is non-param. sample quantile)
 decomp2 <- fmEsDecomp(fit.sub, type="normal")
 names(decomp2)
@@ -187,11 +187,11 @@ plot(fit.sub, which=10, f.sub=1:3)
 ## #
 ## # Selection:
 
-## ----fig.cap="Actual and fitted factor model returns for the 1st 4 assets", fig.show='asis', fig.width=7, fig.height=6----
+## ----fig.cap="Actual and fitted factor model returns for the 1st 4 assets", fig.show='asis', fig.width=7, fig.height=10----
 # Examples of group plots: looping disabled & no. of assets displayed = 4.
 plot(fit.sub, which=3, a.sub=1:4, legend.loc=NULL, lwd=1)
 
-## ----fig.cap="Residual scatterplot matrix with histograms, density overlays, correlations and significance stars", warning=FALSE----
+## ----fig.cap="Residual scatterplot matrix with histograms, density overlays, correlations and significance stars", warning=FALSE, fig.show='asis', fig.width=6, fig.height=6----
 plot(fit.sub, which=6) # residual scatter plot matrix with correlations
 
 ## ----eval=FALSE, results='hide'------------------------------------------

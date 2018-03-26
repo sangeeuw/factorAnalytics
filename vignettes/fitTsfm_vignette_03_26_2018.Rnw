@@ -43,7 +43,7 @@ The purpose of this vignette is to demonstrate the use of \code{fitTsfm} and rel
 
 \subsection{Load Package}
 
-The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. Note that there are plans for further updates to the package before its moved back to R-Forge and gets a CRAN release later this year.
+The latest version of the \verb"factorAnalytics" package used in this vignette is hosted in the publicly available GitHub repository https://github.com/sangeeuw/factorAnalytics. There are plans for further updates to the package before its moved back to R-Forge and released on CRAN later this year.
 
 The package can be installed from GitHub using \verb"devtools" as follows.
 <<eval=FALSE>>=
@@ -115,7 +115,7 @@ range(index(factors.Q))
 \newpage
 \section{Fit a time series factor model}
 
-In a time series or macroeconomic factor model, observable economic time series such as industrial production growth rate, interest rates, market returns and inflation are used as common factors that contribute to asset returns. For example, the famous single index model by \citet{sharpe1964capital} uses the market excess return as the common factor (captures economy-wide or market risk) for all assets and the unexplained returns in the error term represents the non-market firm specific risk. On the other hand, \citet{chen1986economic} uses a multi-factor model to find that surprise inflation, the spread between long and short-term interest rates and between high and low grade bonds are significantly priced, while the market portfolio, aggregate consumption risk and oil price risk are not priced separately.
+In a time series or macroeconomic factor model, observable economic time series such as industrial production growth rate, interest rates, market returns and inflation are used as common factors that contribute to asset returns. For example, the famous single index model by \citet{sharpe1964capital} uses the market excess return as the common factor (captures economy-wide or market risk) for all assets and the unexplained returns in the error term represents the non-market firm specific risk. On the other hand, \citet{chen1986economic} uses a multi-factor model to find that surprise inflation, the spread between long and short-term interest rates and between high and low grade bonds are significantly priced, while the market portfolio, aggregate consumption risk and oil price risk are not priced separately. Chapter 15 from \citet{zivot2006modeling} serves as a good reference for a description of the different multi-factor models, estimation methods and relevant examples using S-PLUS.
 
 Let's take a look at the arguments for \code{fitTsfm}.
 
@@ -332,7 +332,7 @@ where, $R$ is the $N \times T$ matrix of asset returns, $B$ is the $N \times K$ 
 
 \code{fmCov()} computes the factor model covariance from a fitted factor model. The covariance of factor returns is the sample covariance matrix by default, but the option exists for the user to specify their own. Options for handling missing observations include "pairwise.complete.obs" (default), "everything", "all.obs", "complete.obs" and "na.or.complete".
 
-<<fig.cap="Factor model return correlation (pairwise complete obs)">>=
+<<fig.cap="Factor model return correlation (pairwise complete obs)", fig.show='asis', fig.width=5, fig.height=5>>=
 fmCov(fit.sub)
 # factor model return correlation plot
 plot(fit.sub, which=8)
@@ -360,7 +360,7 @@ where, summation is across the $K$ factors and the residual, $\mathbf{cSd_i}$ an
 
 \code{fmSdDecomp} performs this decomposition for all assets in the given factor model fit object as shown below. The total standard deviation and component, marginal and percentage component contributions for each asset are returned.
 
-<<fig.cap="Percentage factor contribution to SD">>=
+<<fig.cap="Percentage factor contribution to SD", fig.show='asis', fig.width=5, fig.height=5>>=
 decomp <- fmSdDecomp(fit.sub)
 names(decomp)
 # get the factor model standard deviation for all assets
@@ -387,7 +387,7 @@ The marginal contribution to $VaR.fm$ is defined as the expectation of $F.star$,
 
 \code{fmVaRDecomp} performs this decomposition for all assets in the given factor model fit object as shown below.
 
-<<fig.cap="Percentage factor contribution to VaR">>=
+<<fig.cap="Percentage factor contribution to VaR", fig.show='asis', fig.width=5, fig.height=5>>=
 # factor model VaR decomp using estimated factor return covariance (default)
 # using tail probability = 10% (default = 5%)
 decomp1 <- fmVaRDecomp(fit.sub, p=0.10)
@@ -410,7 +410,7 @@ ES.fm_i = \sum_{k=1}^{K+1} cES_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mES_{i,
 The marginal contribution to $ES.fm$ is defined as the expectation of $F.star$, conditional on the loss being less than or equal to $VaR.fm$. This is estimated as a sample average of the observations in that data window. Once again, input variable \code{type} gives the option to estimate $VaR.fm$ non-parametrically using the sample quantile or assuming a normal distribution.
 
 \code{fmEsDecomp} performs this decomposition for all assets in the given factor model fit object as shown below.
-<<fig.cap="Percentage factor contribution to ES">>=
+<<fig.cap="Percentage factor contribution to ES", fig.show='asis', fig.width=5, fig.height=5>>=
 # using normal distr. for computing ES (default is non-param. sample quantile)
 decomp2 <- fmEsDecomp(fit.sub, type="normal")
 names(decomp2)
@@ -471,12 +471,12 @@ Remarks:
 \item The last option for plotting asset returns vs. factor returns (group plot option 12 and individual asset plot option 19) are only applicable for single factor models.
 \end{itemize}
 
-<<fig.cap="Actual and fitted factor model returns for the 1st 4 assets", fig.show='asis', fig.width=7, fig.height=6>>=
+<<fig.cap="Actual and fitted factor model returns for the 1st 4 assets", fig.show='asis', fig.width=7, fig.height=10>>=
 # Examples of group plots: looping disabled & no. of assets displayed = 4.
 plot(fit.sub, which=3, a.sub=1:4, legend.loc=NULL, lwd=1)
 @
 
-<<fig.cap="Residual scatterplot matrix with histograms, density overlays, correlations and significance stars", warning=FALSE>>=
+<<fig.cap="Residual scatterplot matrix with histograms, density overlays, correlations and significance stars", warning=FALSE, fig.show='asis', fig.width=6, fig.height=6>>=
 plot(fit.sub, which=6) # residual scatter plot matrix with correlations
 @
 
