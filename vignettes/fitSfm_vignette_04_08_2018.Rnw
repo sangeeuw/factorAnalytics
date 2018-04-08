@@ -121,7 +121,7 @@ The "xts" data object, \code{tr.yields}, contains yields on Treasury bonds at 11
 Daily yields are missing from some values of T. For example, the 20-year constant maturity series were discontinued at the end of calendar year 1986 and reinstated on October 1, 1993. Omitting the missing values of the differenced data, leaves 819 days of observations. Excluding the one-month and 20-year yields would leave us with a longer series.
 
 \newpage
-\section{Fit a statistical factor model}
+\section{Fitting a statistical factor model}
 
 In statistical factor models, factor realizations are not directly observable (unlike times series factor models) and the factor loadings are not known (unlike some fundamental factor models). Both factors and betas must be extracted from the returns data using statistical methods such as factor analysis or Principal Component Analysis (PCA). Chapter 15 from \citet{zivot2006modeling} serves as a good reference for a description of the different multi-factor models, estimation methods and relevant examples using S-PLUS.
 
@@ -255,8 +255,7 @@ plot(fit.apca, which=5, legend.loc="topright")
 methods(class="sfm")
 @
 
-Many useful generic accessor functions are available for "sfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an "xts" data object with the component of asset returns not explained by the factor model.
-\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
+Many useful generic accessor functions are available for "sfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the part of observed asset returns explained by the factor model. \code{residuals()} returns an xts data object with the part of observed asset returns not explained by the factor model. \code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
 
 <<eval=FALSE>>=
 ## S3 method for class "sfm"

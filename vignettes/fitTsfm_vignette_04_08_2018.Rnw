@@ -113,7 +113,7 @@ range(index(factors.Q))
 @
 
 \newpage
-\section{Fit a time series factor model}
+\section{Fitting a time series factor model}
 
 In a time series or macroeconomic factor model, observable economic time series such as industrial production growth rate, interest rates, market returns and inflation are used as common factors that contribute to asset returns. For example, the famous single index model by \citet{sharpe1964capital} uses the market excess return as the common factor (captures economy-wide or market risk) for all assets and the unexplained returns in the error term represents the non-market firm specific risk. On the other hand, \citet{chen1986economic} uses a multi-factor model to find that surprise inflation, the spread between long and short-term interest rates and between high and low grade bonds are significantly priced, while the market portfolio, aggregate consumption risk and oil price risk are not priced separately. Chapter 15 from \citet{zivot2006modeling} serves as a good reference for a description of the different multi-factor models, estimation methods and relevant examples using S-PLUS.
 
@@ -287,8 +287,7 @@ There are 3 other significant arguments that can be passed through the \code{...
 methods(class="tsfm")
 @
 
-Many useful generic accessor functions are available for "tsfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the component of asset returns not explained by the factor model.
-\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
+Many useful generic accessor functions are available for "tsfm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the part of observed asset returns explained by the factor model. \code{residuals()} returns an xts data object with the part of observed asset returns not explained by the factor model. \code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
 
 \code{summary()} prints standard errors and t-statistics for all estimated coefficients in addition to R-squared values and residual volatilities. Argument \code{se.type}, one of "Default", "HC" or "HAC", allows for heteroskedasticity and auto-correlation consistent estimates and standard errors whenever possible. A "summary.tsfm" object is returned which contains a list of summary objects returned by "lm", "lm.Rob" or "lars" for each asset fit.
 

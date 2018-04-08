@@ -108,7 +108,7 @@ table(stocklist$GICS.SECTOR)
 @
 
 \newpage
-\section{Fit a fundamental factor model}
+\section{Fitting a fundamental factor model}
 
 A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. Chapter 15 from \citet{zivot2006modeling} serves as a good reference for a description of the different multi-factor models, estimation methods and relevant examples using S-PLUS.
 
@@ -195,7 +195,7 @@ plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
      sort.by="mean")
 @
 
-An extension of the above sector model is to isolate the market effect through the use of an intercept term and reparametrizing the sector exposures so that they are measured relative to the common market factor. Here, the intercept is interpreted as the return to the market factor, while the other factors are excess returns for the sector over the market. The methodology behind this model was introduced in the context of a common country effect in \citet{heston1995industry} and also detailed in \citet{menchero2010characteristics}. In \code{fitFfm} the market + sector model can be opted via the parameter \code{add.intercept} as shown below.
+An extension of the above sector model is to isolate the market effect through the use of an intercept term and reparametrizing the sector exposures so that they are measured relative to the common market factor. Here, the intercept is interpreted as the return to the market factor (sum of all sectors), while the other factors are excess returns for the sector over the market. The methodology behind this model was introduced in the context of a common country effect in \citet{heston1995industry} and also detailed in \citet{menchero2010characteristics}. In \code{fitFfm} the market + sector model can be opted via the parameter \code{add.intercept} as shown below.
 
 <<>>=
 # Market + Sector Factor Model
@@ -218,12 +218,9 @@ plot(fit.mkt.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
 methods(class="ffm")
 @
 
-Many useful generic accessor functions are available for "ffm" fit objects. \code{coef()} returns a matrix of estimated model coefficients including the intercept. \code{fitted()} returns an xts data object of the component of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the component of asset returns not explained by the factor model.
-\code{predict()} uses the fitted factor model to estimate asset returns given a set of new or simulated factor return data.
+Many useful generic accessor functions are available for "ffm" fit objects. \code{coef()} returns a dataframe containing the estimated coefficients (intercept and factor exposures). \code{fitted()} returns an xts data object of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the part of observed asset returns not explained by the factor model. \code{predict()} returns a vector or matrix of predicted returns for new or simulated values of the fundamental characteristics, with the option to choose a relevant date for the estimated factor exposures used in the prediction.
 
-\code{summary()} prints standard errors and t-statistics for all estimated coefficients in addition to R-squared values and residual volatilities. Argument \code{se.type}, one of "Default", "HC" or "HAC", allows for heteroskedasticity and auto-correlation consistent estimates and standard errors whenever possible. A "summary.ffm" object is returned which contains a list of summary objects returned by "lm", "lm.Rob" or "lars" for each asset fit.
-
-Note: Standard errors are currently not available for the "lars" variable selection method, as there seems to be no consensus on a statistically valid method of calculating standard errors for the lasso predictions.
+\code{summary()} returns an object of class \code{"summary.ffm"} containing the summaries of the fitted objects. Printing the factor model summary object outputs the call, estimated factor returns, r-squared and residual volatility for each time period.
 
 Factor model covariance and risk decomposition functions are explained in section 3 and the \code{plot} method is discussed separately in Section 4.
 
