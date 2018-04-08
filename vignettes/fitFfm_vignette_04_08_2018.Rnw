@@ -59,8 +59,9 @@ options(digits=3)
 
 The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code as part of Google Summer of Code (GSOC) 2013 . Sangeetha Srinivasan tested and expanded the functionalities and S3 methods as part of GSOC in 2014 and 2015. Doug Martin, Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad added options to fit EWMA or GARCH model for errors, enabled a market + industry and/or sector and/or country model specification, etc. as part of GSOC 2016 and 2017. Refer to the other fundamental factor model vignette by Avinash Acharya for more examples elaborating on these recent functionalities and reporting functions.
 
-\subsection{Summary of related functions}
-Here's a list of the functions and methods demonstrated in this vignette:
+\subsection{Summary of fitFfm function and related methods}
+
+Here's a summary of the fit function and related S3 methods (generic accessor functions) demonstrated in this vignette:
 
 \begin{itemize}
 
@@ -84,9 +85,16 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \item \verb"predict(object, newdata, pred.date, ...)": The \code{predict} method for class "ffm" returns a vector or matrix of predicted returns for new or simulated values of the fundamental characteristics. \code{pred.date} allows user to choose the relevant date for the estimated factor exposures to be used in the prediction.
 
+\item \verb"print(object, digits, ...)": The \code{predict} method for class "ffm" prints the call, factor model dimension and summary statistics for the estimated factor returns, cross-sectional r-squared values and residual variances from the fitted object.
+
 \item \verb"summary(object, ...)": The \code{summary} method for class "ffm" returns an object of class \code{"summary.ffm"} containing the summaries of the fitted objects. Printing the factor model summary object outputs the call, estimated factor returns, r-squared and residual volatility for each time period.
 
 \end{itemize}
+
+A complete list of related methods is shown below.
+<<>>=
+methods(class="ffm")
+@
 
 \subsection{Data}
 
@@ -189,10 +197,9 @@ summary(fit.sector$factor.fit[[num.periods]])
 Figure 2 shows the distribution of estimated monthly sector returns (from 1996 - 2003) in descending order of their mean. We find that the "Information Technology" sector had the highest average return (perhaps not suprising, given that the dataset covers the dot-com bubble).
 
 \newpage
-<<fig.cap="Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=6, fig.height=4.5>>=
+<<fig.cap="Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=5.5, fig.height=3.5>>=
 # plot distribution of factor returns by sector sorted by means
-plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
-     sort.by="mean")
+plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1, sort.by="mean")
 @
 
 An extension of the above sector model is to isolate the market effect through the use of an intercept term and reparametrizing the sector exposures so that they are measured relative to the common market factor. Here, the intercept is interpreted as the return to the market factor (sum of all sectors), while the other factors are excess returns for the sector over the market. The methodology behind this model was introduced in the context of a common country effect in \citet{heston1995industry} and also detailed in \citet{menchero2010characteristics}. In \code{fitFfm} the market + sector model can be opted via the parameter \code{add.intercept} as shown below.
@@ -200,43 +207,24 @@ An extension of the above sector model is to isolate the market effect through t
 <<>>=
 # Market + Sector Factor Model
 fit.mkt.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
-              date.var="DATE", exposure.vars="GICS.SECTOR", add.intercept=TRUE)
+                         date.var="DATE", exposure.vars="GICS.SECTOR",
+                         add.intercept=TRUE)
+
+# coefficients (factor exposures) for first 10 assets
+t(coef(fit.mkt.sector)[1:10,])
 @
 
-Note that the ordering of sectors by average factor return has not changed. But we get the added perspective of sector returns relative to the broad market return. The reader can also verify for themselves that the regression R-squared and other fit statistics are unchanged by the addition of the market factor.
-
-<<fig.cap="Market + Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=6, fig.height=4.5>>=
+<<fig.cap="Market + Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=5.5, fig.height=3.5>>=
 # plot distribution of factor returns by sector sorted by means
-plot(fit.mkt.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
-     sort.by="mean")
+plot(fit.mkt.sector, which=1, colorset="black", f.sub=1:10, lwd=1, sort.by="mean")
 @
+
+The reparametrization of the market factor hasn't changed the order of sectors by mean factor return. The reader can verify that R-squared and other fit statistics haven't changed either.
 
 \newpage
-\subsection{S3 generic methods}
+\subsection{}
 
-<<>>=
-methods(class="ffm")
-@
 
-Many useful generic accessor functions are available for "ffm" fit objects. \code{coef()} returns a dataframe containing the estimated coefficients (intercept and factor exposures). \code{fitted()} returns an xts data object of asset returns explained by the factor model. \code{residuals()} returns an xts data object with the part of observed asset returns not explained by the factor model. \code{predict()} returns a vector or matrix of predicted returns for new or simulated values of the fundamental characteristics, with the option to choose a relevant date for the estimated factor exposures used in the prediction.
-
-\code{summary()} returns an object of class \code{"summary.ffm"} containing the summaries of the fitted objects. Printing the factor model summary object outputs the call, estimated factor returns, r-squared and residual volatility for each time period.
-
-Factor model covariance and risk decomposition functions are explained in section 3 and the \code{plot} method is discussed separately in Section 4.
-
-Here are some examples using the time series factor models fitted earlier.
-<<>>=
-# all estimated coefficients from the LS fit using all 3 factors
-coef(fit.ols)
-
-# compare returns data with fitted and residual values for HAM1 from fit.lars
-HAM1.ts <- merge(fit.lars$data[,1], fitted(fit.lars)[,1], residuals(fit.lars)[,1])
-colnames(HAM1.ts) <- c("HAM1.return","HAM1.fitted","HAM1.residual")
-tail(HAM1.ts)
-
-# summary for fit.sub computing HAC standard erros
-summary(fit.sub, se.type="HAC")
-@
 
 \newpage
 \section{Factor Model Covariance \& Risk Decomposition}
