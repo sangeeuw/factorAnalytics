@@ -112,7 +112,7 @@ table(stocklist$GICS.SECTOR)
 
 A fundamental factor model uses observed cross-sectional asset characteristics such as dividend yield, earnings yield, book-to-market ratio, market capitalization, sector or industry classification, price volatility, price momemtum, leverage, etc. to determine common risk factors that contribute to asset returns. Chapter 15 from \citet{zivot2006modeling} serves as a good reference for a description of the different multi-factor models, estimation methods and relevant examples using S-PLUS.
 
-There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. Due to cross-sectional heteroskedasticity of asset returns, ordinary least squares (OLS) estimation of the factor returns is inefficient. Inverse of the estimated residual variances are used as weights for a weighted least squares regression to get efficient estimates. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap for the size factor). After the factor returns are computed for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
+There are 2 main approaches to estimating the fundamental factor model - the "BARRA" approach (detailed in \citet{grinold2000active}) and the "Fama-French" approach (introduced in \citet{fama1992cross}). In the "BARRA" approach, the obsered fundamental attributes are the factor betas and the unknown factor returns are estimated via cross-sectional regressions for each time period. Due to cross-sectional heteroskedasticity of asset returns, ordinary least squares (OLS) estimation of the factor returns is inefficient. So weighted least squares regression is performed as a second step to get efficient estimates, with the inverse of the estimated residual variances or market cap used as weights. In the "Fama-French" approach, the factor returns are the observed returns of a hypothetical hedge portfolio that's long/short the top/bottom quintile of stocks for a given attribute (ex: market cap for the size factor). After the factor returns are computed for each characterictic, each asset's factor exposures are estimated via a time series regression. \code{fitFfm} described in this vignette uses the "BARRA" approach.
 
 Let's take a look at the arguments for \code{fitFfm}.
 
@@ -122,13 +122,13 @@ args(fitFfm)
 
 The default model fitting method is ordinary least squares (LS) regression, with the option to choose robust regression (Rob), weighted least squares (WLS) or weighted robust regression (W-Rob). The different model fitting options are demonstrated in the following sections. If weighted regression (WLS or W-Rob) is chosen, inverse of the residual variances are used as weights. \code{resid.scale.type} allows the user to choose the method for computing residual variances - sample variance, EWMA, Robust EWMA and GARCH(1,1).
 
-\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. \code{weight.var} allows the user to give higher weight to some assets when estimating factor exposures; for example using the market cap of stocks as their weights. \code{add.intercept} gives the option to add an intercept term for fitting a Market + Sector or a Market + Sector + Country model. These models can simultaneously include other style factors. \code{lag.exposures} gives the option to use lag the factor exposures by one time period. \code{full.resid.cov} provides the option to choose between a diagonal vs. full residual covariance matrix. And, \code{rob.stats} allows for robust estimates of covariance, correlation, location and univariate scale.
+\code{z.score} provides the option to standardize factor exposures cross-sectionally across assets or across time periods. \code{weight.var} allows the user to give higher weight to some assets when estimating factor exposures; for example using the market cap of stocks as their weights. \code{add.intercept} gives the option to add an intercept term for fitting a Market + Sector or a Market + Sector + Country model. These models can simultaneously include other style factors. \code{lag.exposures} gives the option to use the factor exposures from the previous time period to estimate factor returns for the current period. \code{full.resid.cov} provides the option to choose between a diagonal vs. full residual covariance matrix. And, \code{rob.stats} allows for robust estimates of covariance, correlation, location and univariate scale.
 
 These and other control parameters are demonstrated in the following sections.
 
 \subsection{Single Factor Model}
 
-Here's an example of a single factor model using the book-to-market ratio, which is a proxy for the value factor, as the explanatory variable for the returns of 447 stocks in the dataset.
+Here's an example of a single factor model using the book-to-market ratio, a proxy for the value factor, as the explanatory variable for the returns of 447 stocks in the dataset.
 
 <<>>=
 # Single Factor Model
@@ -150,9 +150,9 @@ The \code{print} method displays a summary of the $T$ cross-sectional regression
 fit.single
 @
 
-Figure 1 shows a scatter plot of residuals for the 1st 6 stocks in the last time period, including histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL; this might be due to their exposure to other omitted factors such as a sector/industry risk factor for "Software \& Services".
+Figure 1 shows a scatter plot of residuals for the 1st 6 stocks in the last time period, including histograms, density overlays, correlations and significance stars. (Plot options are explained later in section 4.) Note the high residual correlation between MSFT and ORCL; this might be due to their exposure to other omitted factors such as a sector/industry risk factor for "Software \& Services". The next section demonstrates fitting an industry/sector factor model for these stocks.
 
-<<fig.cap="Single factor model: Residual correlations", warning=FALSE, fig.show='asis', fig.width=5.5, fig.height=5.5>>=
+<<fig.cap="Single factor model: Residual correlations", warning=FALSE, fig.show='asis', fig.width=6, fig.height=6>>=
 # plot residual correlations for the single factor model
 # default is to plot the 1st 6 assets
 plot(fit.single, which=6, f.sub=1)
@@ -160,16 +160,23 @@ plot(fit.single, which=6, f.sub=1)
 subset(stock,DATE=="2003-11-28")[1:6,c("TICKER","GICS.INDUSTRY","GICS.SECTOR")]
 @
 
+\newpage
 \subsection{BARRA-type Industry Factor Model}
 
-A BARRA-type industry (sector) factor model is a fundamental factor model with multiple factors. It is implemented here for the 447 NYSE stocks in our dataset, using the 10 mutually exclusive GICS sector classifications as the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period.
+A BARRA-type industry (sector) factor model is a fundamental factor model with multiple factors. Here is a demonstration using the 447 NYSE stocks in our dataset; where the 10 mutually exclusive GICS sector classifications are the 10 factors. The factor exposures will be dummy variables that indicate if a given stock belongs to a particular sector or not. Mutually exclusive sectors means that each stock belongs to a unique sector in any given time period. Notice that the average R-squared from the sector model is significantly higher (and average residual correlations are lower) than the single factor model.
 <<>>=
 # Sector Factor Model
 fit.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
                      date.var="DATE", exposure.vars="GICS.SECTOR")
+# compare r2: single factor vs. sector model
+summary(fit.single$r2)
+summary(fit.sector$r2)
+# compare avg. non-diagonal correlations: single factor vs. sector model
+mean(cor(residuals(fit.single))[cor(residuals(fit.single))!=1])
+mean(cor(residuals(fit.sector))[cor(residuals(fit.sector))!=1])
 @
 
-Let's take a look at the fitted factor model from the last period in the data. Energy, Materials and Telecomm sectors had particularly strong returns, with estimated factor returns over 10\% for that month\footnotemark[1].
+Let's take a look at the fitted factor model from the last period in the data. We observe that Energy, Materials and Telecomm sectors had particularly strong returns, with estimated factor returns over 10\% for that month\footnotemark[1].
 
 \footnotetext[1]{Energy stocks rebounded in 2003 from the beating they took in 2002 following the Enron scandal. Telecomm stocks benefited from the increased spending by companies investing in internet-based phone systems during this period.}
 
@@ -179,11 +186,28 @@ num.periods <- length(fit.sector$time.periods)
 summary(fit.sector$factor.fit[[num.periods]])
 @
 
-Figure 2 shows the distribution of estimated monthly sector returns (from 1996 - 2003) in descending order of their mean. We find that the "Information Technology" sector had the highest average return (not suprising, given this dataset covers a significant part of the dot-com bubble).
+Figure 2 shows the distribution of estimated monthly sector returns (from 1996 - 2003) in descending order of their mean. We find that the "Information Technology" sector had the highest average return (perhaps not suprising, given that the dataset covers the dot-com bubble).
 
+\newpage
 <<fig.cap="Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=6, fig.height=4.5>>=
 # plot distribution of factor returns by sector sorted by means
 plot(fit.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
+     sort.by="mean")
+@
+
+An extension of the above sector model is to isolate the market effect through the use of an intercept term and reparametrizing the sector exposures so that they are measured relative to the common market factor. Here, the intercept is interpreted as the return to the market factor, while the other factors are excess returns for the sector over the market. The methodology behind this model was introduced in the context of a common country effect in \citet{heston1995industry} and also detailed in \citet{menchero2010characteristics}. In \code{fitFfm} the market + sector model can be opted via the parameter \code{add.intercept} as shown below.
+
+<<>>=
+# Market + Sector Factor Model
+fit.mkt.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+              date.var="DATE", exposure.vars="GICS.SECTOR", add.intercept=TRUE)
+@
+
+Note that the ordering of sectors by average factor return has not changed. But we get the added perspective of sector returns relative to the broad market return. The reader can also verify for themselves that the regression R-squared and other fit statistics are unchanged by the addition of the market factor.
+
+<<fig.cap="Market + Sector model: Distribution of factor returns sorted by mean", fig.show='asis', fig.width=6, fig.height=4.5>>=
+# plot distribution of factor returns by sector sorted by means
+plot(fit.mkt.sector, which=1, colorset="black", f.sub=1:10, lwd=1,
      sort.by="mean")
 @
 
