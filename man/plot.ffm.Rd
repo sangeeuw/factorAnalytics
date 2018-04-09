@@ -5,52 +5,44 @@
 \title{Plots from a fitted fundamental factor model}
 \usage{
 \method{plot}{ffm}(x, which = NULL, f.sub = 1:2, a.sub = 1:6,
-  plot.single = FALSE, asset.name, use.date = NULL,
-  colorset = c("royalblue", "dimgray", "olivedrab", "firebrick", "goldenrod",
-  "mediumorchid", "deepskyblue", "chocolate", "darkslategray"),
-  legend.loc = "topleft", las = 1, lwd = 2, maxlag = 15, ...)
+  plot.single = FALSE, asset.name, colorset = c("royalblue", "dimgray",
+  "olivedrab", "firebrick", "goldenrod", "mediumorchid", "deepskyblue",
+  "chocolate", "darkslategray"), legend.loc = "topleft", las = 1, lwd = 2,
+  maxlag = 15, ...)
 }
 \arguments{
 \item{x}{an object of class \code{ffm} produced by \code{fitFfm}.}
 
 \item{which}{a number to indicate the type of plot. If multiple plots are
-required, specify a subset from 1:12 for group plots and 1:19 for individual
+required, specify a subset from 1:12 for group plots and 1:13 for individual
 plots. If \code{which=NULL} (default), the following menu appears: \cr \cr
 For plots of a group of assets: \cr
 1 = Distribution of factor returns, \cr
 2 = Factor exposures from the last period, \cr
-3 = Actual and fitted, \cr
-4 = R-squared, \cr
-5 = Residual variance, x \cr
+3 = Actual and Fitted asset returns, \cr
+4 = Time-series of R-squared values, \cr
+5 = Residual variance across assets, x \cr
 6 = Scatterplot matrix of residuals, with histograms, density overlays, correlations and significance stars, \cr
-7 = Factor model residual correlation \cr
-8 = Factor model return correlation,\cr
-9 = Factor contribution to SD,\cr
-10 = Factor contribution to ES,\cr
-11 = Factor contribution to VaR, \cr
-12 = Asset returns vs factor returns (single factor model) \cr
-13 = Time series of factor returns, \cr
-14 = Time series of style factor exposures, \cr \cr
+7 = Factor Model Residual Correlation \cr
+8 = Factor Model Return Correlation,\cr
+9 = Factor Contribution to SD,\cr
+10 = Factor Contribution to ES,\cr
+11 = Factor Contribution to VaR, \cr
+12 = Time series of factor returns, \cr \cr
 For individual asset plots:\cr
 1 = Actual and fitted,\cr
-2 = Actual vs fitted,\cr
-3 = Residuals vs fitted, \cr
-4 = Sqrt. of modified residuals vs fitted, \cr
-5 = Residuals with standard error bands, \cr
-6 = Time series of squared residuals, \cr
-7 = Time series of absolute residuals,\cr
-8 = SACF and PACF of residuals,\cr
-9 = SACF and PACF of squared residuals,\cr
-10 = SACF and PACF of absolute residuals,\cr
-11 = Non-parametric density of residuals with normal overlaid, \cr
-12 = Non-parametric density of residuals with skew-t overlaid, \cr
-13 = Histogram of residuals with non-parametric density and normal overlaid,\cr
-14 = QQ-plot of residuals,\cr
-15 = CUSUM test-Recursive residuals,\cr
-16 = CUSUM test-LS residuals,\cr
-17 = Recursive estimates (RE) test of LS regression coefficients,\cr
-18 = Rolling regression over a 24-period observation window, \cr
-19 = Asset returns vs factor returns (single factor model)}
+2 = Actual vs. fitted,\cr
+3 = Residuals vs. fitted, \cr
+4 = Residuals with standard error bands, \cr
+5 = Time series of squared residuals, \cr
+6 = Time series of absolute residuals,\cr
+7 = SACF and PACF of residuals,\cr
+8 = SACF and PACF of squared residuals,\cr
+9 = SACF and PACF of absolute residuals,\cr
+10 = Non-parametric density of residuals with normal overlaid, \cr
+11 = Non-parametric density of residuals with skew-t overlaid, \cr
+12 = Histogram of residuals with non-parametric density and normal overlaid,\cr
+13 = QQ-plot of residuals}
 
 \item{f.sub}{numeric/character vector; subset of indexes/names of factors to
 include for group plots. Default is 1:2.}
@@ -64,11 +56,6 @@ individual asset's factor model. The type of plot is given by
 
 \item{asset.name}{name of the individual asset to be plotted. Is necessary
 if \code{x} contains multiple asset fits and \code{plot.single=TRUE}.}
-
-\item{use.date}{character; unique date used to reference factor exposures.
-Should be coercible to class \code{Date} and match one of the dates in the
-data used in the fitted \code{object}. Default is NULL; uses the last period
-factor exposures.}
 
 \item{colorset}{color palette to use for all the plots. The 1st element will
 be used for individual time series plots or the 1st object plotted, the 2nd
@@ -110,41 +97,30 @@ Setting \code{plot.single=TRUE} enables individual plots. If there is more
 than one asset fit by \code{x}, \code{asset.name} should be specified.
 In case the \code{ffm} object \code{x} contains only a single asset fit,
 plot.ffm can infer \code{asset.name} without user input.
-
-CUSUM plots (individual asset plot options 15, 16 and 17) are applicable
-only for \code{fit.method="LS"}.
-
-Modified residuals, rolling regression and single factor model plots
-(individual asset plot options 4, 18 and 19) are not applicable for
-\code{variable.selection="lars"}.
-
-The last option for plotting asset returns vs. factor returns (individual
-asset plot option 19 and group plot 12) are only applicable for single factor
-models.
 }
 \examples{
 
 # load data from the database
-data(managers)
-fit.macro <- fitFfm(asset.names=colnames(managers[,(1:6)]),
-                     factor.names=colnames(managers[,(7:9)]),
-                     rf.name="US.3m.TR", data=managers)
+data(Stock.df)
+fit.style.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+                           exposure.vars=c("GICS.SECTOR","LOG.MARKETCAP",
+                                           "BOOK2MARKET"), date.var="DATE")
 
 # for group plots (default), user can select plot option from menu prompt
 # menu is repeated to get multiple types of plots based on the same fit
-# plot(fit.macro)
+# plot(fit.style.sector)
 
 # choose specific plot option(s) using which
-# plot the first 2 factor betas of first 4 assets fitted above
-plot(fit.macro, f.sub=1:2, a.sub=1:4, which=2)
+# plot all factor exposures from the last time period for 1st 10 assets
+plot(fit.style.sector, which=2, f.sub=1:12, a.sub=1:10)
 
 # plot factor model residuals scatterplot matrix, with histograms, density
 # overlays, correlations and significance stars
-plot(fit.macro, which=6)
+plot(fit.style.sector, which=6)
 
 # for individual plots: set plot.single=TRUE and specify asset.name
 # histogram of residuals from an individual asset's factor model fit
-plot(fit.macro, plot.single=TRUE, asset.name="HAM1", which=13)
+plot(fit.style.sector, plot.single=TRUE, asset.name="MSFT", which=12)
 
 }
 \seealso{
@@ -155,7 +131,7 @@ S3 methods. Refer to \code{\link{fmSdDecomp}}, \code{\link{fmEsDecomp}},
 \code{\link{fmVaRDecomp}} for factor model risk measures.
 
 Here is a list of plotting functions used. (I=individual, G=Group)
-I(1,5,6,7), G(3) - \code{\link[PerformanceAnalytics]{chart.TimeSeries}},
+I(1,5,6,7), G(3,4,12) - \code{\link[PerformanceAnalytics]{chart.TimeSeries}},
 I(2,3,4,19), G(12) - \code{\link[graphics]{plot.default}},
 I(3,4) - \code{\link[graphics]{panel.smooth}},
 I(8,9,10) - \code{\link[PerformanceAnalytics]{chart.ACFplus}},
@@ -165,7 +141,7 @@ I(14) - \code{\link[PerformanceAnalytics]{chart.QQPlot}},
 I(15,16,17) - \code{\link[strucchange]{plot.efp}},
 I(18) - \code{\link[zoo]{plot.zoo}},
 G(1) - \code{\link[PerformanceAnalytics]{chart.Boxplot}},
-G(2,4,5,9,10,11) - \code{\link[lattice]{barchart}},
+G(2,5,9,10,11) - \code{\link[lattice]{barchart}},
 G(6) - \code{\link[PerformanceAnalytics]{chart.Correlation}} and
 G(7,8) - \code{\link[corrplot]{corrplot.mixed}}.
 }

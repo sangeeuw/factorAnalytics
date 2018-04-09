@@ -23,56 +23,37 @@
 #' In case the \code{ffm} object \code{x} contains only a single asset fit,
 #' plot.ffm can infer \code{asset.name} without user input.
 #'
-#' CUSUM plots (individual asset plot options 15, 16 and 17) are applicable
-#' only for \code{fit.method="LS"}.
-#'
-#' Modified residuals, rolling regression and single factor model plots
-#' (individual asset plot options 4, 18 and 19) are not applicable for
-#' \code{variable.selection="lars"}.
-#'
-#' The last option for plotting asset returns vs. factor returns (individual
-#' asset plot option 19 and group plot 12) are only applicable for single factor
-#' models.
-#'
 #' @param x an object of class \code{ffm} produced by \code{fitFfm}.
 #' @param which a number to indicate the type of plot. If multiple plots are
-#' required, specify a subset from 1:12 for group plots and 1:19 for individual
+#' required, specify a subset from 1:12 for group plots and 1:13 for individual
 #' plots. If \code{which=NULL} (default), the following menu appears: \cr \cr
 #' For plots of a group of assets: \cr
 #' 1 = Distribution of factor returns, \cr
 #' 2 = Factor exposures from the last period, \cr
-#' 3 = Actual and fitted, \cr
-#' 4 = R-squared, \cr
-#' 5 = Residual variance, x \cr
+#' 3 = Actual and Fitted asset returns, \cr
+#' 4 = Time-series of R-squared values, \cr
+#' 5 = Residual variance across assets, x \cr
 #' 6 = Scatterplot matrix of residuals, with histograms, density overlays, correlations and significance stars, \cr
-#' 7 = Factor model residual correlation \cr
-#' 8 = Factor model return correlation,\cr
-#' 9 = Factor contribution to SD,\cr
-#' 10 = Factor contribution to ES,\cr
-#' 11 = Factor contribution to VaR, \cr
-#' 12 = Asset returns vs factor returns (single factor model) \cr
-#' 13 = Time series of factor returns, \cr
-#' 14 = Time series of style factor exposures, \cr \cr
+#' 7 = Factor Model Residual Correlation \cr
+#' 8 = Factor Model Return Correlation,\cr
+#' 9 = Factor Contribution to SD,\cr
+#' 10 = Factor Contribution to ES,\cr
+#' 11 = Factor Contribution to VaR, \cr
+#' 12 = Time series of factor returns, \cr \cr
 #' For individual asset plots:\cr
 #' 1 = Actual and fitted,\cr
-#' 2 = Actual vs fitted,\cr
-#' 3 = Residuals vs fitted, \cr
-#' 4 = Sqrt. of modified residuals vs fitted, \cr
-#' 5 = Residuals with standard error bands, \cr
-#' 6 = Time series of squared residuals, \cr
-#' 7 = Time series of absolute residuals,\cr
-#' 8 = SACF and PACF of residuals,\cr
-#' 9 = SACF and PACF of squared residuals,\cr
-#' 10 = SACF and PACF of absolute residuals,\cr
-#' 11 = Non-parametric density of residuals with normal overlaid, \cr
-#' 12 = Non-parametric density of residuals with skew-t overlaid, \cr
-#' 13 = Histogram of residuals with non-parametric density and normal overlaid,\cr
-#' 14 = QQ-plot of residuals,\cr
-#' 15 = CUSUM test-Recursive residuals,\cr
-#' 16 = CUSUM test-LS residuals,\cr
-#' 17 = Recursive estimates (RE) test of LS regression coefficients,\cr
-#' 18 = Rolling regression over a 24-period observation window, \cr
-#' 19 = Asset returns vs factor returns (single factor model)
+#' 2 = Actual vs. fitted,\cr
+#' 3 = Residuals vs. fitted, \cr
+#' 4 = Residuals with standard error bands, \cr
+#' 5 = Time series of squared residuals, \cr
+#' 6 = Time series of absolute residuals,\cr
+#' 7 = SACF and PACF of residuals,\cr
+#' 8 = SACF and PACF of squared residuals,\cr
+#' 9 = SACF and PACF of absolute residuals,\cr
+#' 10 = Non-parametric density of residuals with normal overlaid, \cr
+#' 11 = Non-parametric density of residuals with skew-t overlaid, \cr
+#' 12 = Histogram of residuals with non-parametric density and normal overlaid,\cr
+#' 13 = QQ-plot of residuals
 #' @param f.sub numeric/character vector; subset of indexes/names of factors to
 #' include for group plots. Default is 1:2.
 #' @param a.sub numeric/character vector; subset of indexes/names of assets to
@@ -82,10 +63,6 @@
 #' \code{which}. Default is \code{FALSE}.
 #' @param asset.name name of the individual asset to be plotted. Is necessary
 #' if \code{x} contains multiple asset fits and \code{plot.single=TRUE}.
-#' @param use.date character; unique date used to reference factor exposures.
-#' Should be coercible to class \code{Date} and match one of the dates in the
-#' data used in the fitted \code{object}. Default is NULL; uses the last period
-#' factor exposures.
 #' @param colorset color palette to use for all the plots. The 1st element will
 #' be used for individual time series plots or the 1st object plotted, the 2nd
 #' element for the 2nd object in the plot and so on.
@@ -108,7 +85,7 @@
 #' \code{\link{fmVaRDecomp}} for factor model risk measures.
 #'
 #' Here is a list of plotting functions used. (I=individual, G=Group)
-#' I(1,5,6,7), G(3) - \code{\link[PerformanceAnalytics]{chart.TimeSeries}},
+#' I(1,5,6,7), G(3,4,12) - \code{\link[PerformanceAnalytics]{chart.TimeSeries}},
 #' I(2,3,4,19), G(12) - \code{\link[graphics]{plot.default}},
 #' I(3,4) - \code{\link[graphics]{panel.smooth}},
 #' I(8,9,10) - \code{\link[PerformanceAnalytics]{chart.ACFplus}},
@@ -118,39 +95,39 @@
 #' I(15,16,17) - \code{\link[strucchange]{plot.efp}},
 #' I(18) - \code{\link[zoo]{plot.zoo}},
 #' G(1) - \code{\link[PerformanceAnalytics]{chart.Boxplot}},
-#' G(2,4,5,9,10,11) - \code{\link[lattice]{barchart}},
+#' G(2,5,9,10,11) - \code{\link[lattice]{barchart}},
 #' G(6) - \code{\link[PerformanceAnalytics]{chart.Correlation}} and
 #' G(7,8) - \code{\link[corrplot]{corrplot.mixed}}.
 #'
 #' @examples
 #'
 #' # load data from the database
-#' data(managers)
-#' fit.macro <- fitFfm(asset.names=colnames(managers[,(1:6)]),
-#'                      factor.names=colnames(managers[,(7:9)]),
-#'                      rf.name="US.3m.TR", data=managers)
+#' data(Stock.df)
+#' fit.style.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+#'                            exposure.vars=c("GICS.SECTOR","LOG.MARKETCAP",
+#'                                            "BOOK2MARKET"), date.var="DATE")
 #'
 #' # for group plots (default), user can select plot option from menu prompt
 #' # menu is repeated to get multiple types of plots based on the same fit
-#' # plot(fit.macro)
+#' # plot(fit.style.sector)
 #'
 #' # choose specific plot option(s) using which
-#' # plot the first 2 factor betas of first 4 assets fitted above
-#' plot(fit.macro, f.sub=1:2, a.sub=1:4, which=2)
+#' # plot all factor exposures from the last time period for 1st 10 assets
+#' plot(fit.style.sector, which=2, f.sub=1:12, a.sub=1:10)
 #'
 #' # plot factor model residuals scatterplot matrix, with histograms, density
 #' # overlays, correlations and significance stars
-#' plot(fit.macro, which=6)
+#' plot(fit.style.sector, which=6)
 #'
 #' # for individual plots: set plot.single=TRUE and specify asset.name
 #' # histogram of residuals from an individual asset's factor model fit
-#' plot(fit.macro, plot.single=TRUE, asset.name="HAM1", which=13)
+#' plot(fit.style.sector, plot.single=TRUE, asset.name="MSFT", which=12)
 #'
 #' @method plot ffm
 #' @export
 
 plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
-                     plot.single=FALSE, asset.name, use.date=NULL,
+                     plot.single=FALSE, asset.name,
                      colorset=c("royalblue","dimgray","olivedrab","firebrick",
                                 "goldenrod","mediumorchid","deepskyblue",
                                 "chocolate","darkslategray"),
@@ -172,11 +149,14 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
       i <- asset.name
     }
     # extract info from the fitFfm object
-    plotData <- merge.xts(x$data[,i], fitted(x)[,i], residuals(x)[,i])
+    fitted.ret <- fitted(x)[,i]
+    resid.ret <- residuals(x)[,i]
+    asset.ret <- subset(x$data,TICKER==i)[,c(x$date.var,x$ret.var)]
+    asset.ret.xts <- as.xts(asset.ret[,2], order.by=index(fitted.ret))
+    plotData <- merge.xts(asset.ret.xts, fitted.ret, resid.ret)
     colnames(plotData) <- c("Actual","Fitted","Residuals")
     Residuals <- na.omit(plotData[,"Residuals"])
-    fit <- x$factor.fit[[i]]
-    resid.sd <- x$resid.sd[i]
+    resid.sd <- sqrt(x$resid.var[i])
     den <- density(Residuals)
     xval <- den$x
     den.norm <- dnorm(xval, mean=mean(Residuals), sd=resid.sd)
@@ -191,7 +171,6 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
           menu(c("Actual and fitted asset returns",
                  "Actual vs. fitted asset returns",
                  "Residuals vs. fitted asset returns",
-                 "Sqrt. of modified residuals vs. fitted",
                  "Residuals with standard error bands",
                  "Time series of squared residuals",
                  "Time series of absolute residuals",
@@ -201,14 +180,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                  "Non-parametric density of residuals with normal overlaid",
                  "Non-parametric density of residuals with skew-t overlaid",
                  "Histogram of residuals with non-parametric density and normal overlaid",
-                 "QQ-plot of residuals",
-                 "CUSUM test-Recursive residuals",
-                 "CUSUM test-LS residuals",
-                 "Recursive estimates (RE) test of LS regression coefficients",
-                 "Rolling estimates over a 24-period observation window",
-                 "Asset returns vs. factor returns (single factor model)",
-                 "Time series of factor exposures",
-                 "Average factor exposures"),
+                 "QQ-plot of residuals"),
                title="\nMake a plot selection (or 0 to exit):")
       }
 
@@ -217,67 +189,56 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
       switch(which,
              "1L" = {
                ##  Time series plot of actual and fitted asset returns
-               chart.TimeSeries(plotData[,1:2], main=paste("Actual and fitted:",i),
+               chart.TimeSeries(plotData[,1:2], main=paste("Actual and fitted asset returns:",i),
                                 colorset=colorset, xlab="", ylab="Returns", lwd=lwd,
                                 legend.loc=legend.loc, pch=NULL, las=las, ...)
              }, "2L" = {
-               ## Actual vs fitted asset returns
+               ## Actual vs. fitted asset returns
                plot(x=coredata(plotData[,2]), y=coredata(plotData[,1]),
                     xlab="Fitted", ylab="Actual", col=colorset[1],
-                    main=paste("Actual vs fitted:",i), las=las, ...)
+                    main=paste("Actual vs. fitted asset returns:",i), las=las, ...)
                abline(0, 1, col="dimgray",lty="dotted", lwd=lwd)
              }, "3L" = {
-               ## Residuals vs fitted asset returns
+               ## Residuals vs. fitted asset returns
                plot(x=coredata(plotData[,2]), y=coredata(plotData[,3]),
                     xlab="Fitted", ylab="Residuals", col=colorset[1],
-                    main=paste("Residuals vs fitted:",i), las=las, ...)
+                    main=paste("Residuals vs. fitted:",i), las=las, ...)
                panel.smooth(x=coredata(plotData[,2]), y=coredata(plotData[,3]),
                             col=colorset[1], col.smooth=colorset[2], lwd=lwd)
              }, "4L" = {
-               ## Square root of absolute modified residuals vs fitted asset returns
-               if (meth=="Lars") {
-                 stop("This option is not available for 'lars' fits.")
-               }
-               yval <- sqrt(abs(Residuals/sqrt(1-hatvalues(fit))))
-               plot(x=coredata(na.omit(plotData[,2])), y=yval, xlab="Fitted",
-                    ylab=expression(sqrt(abs("Modified Residuals"))), col=colorset[1],
-                    main=paste("Sqrt. modified residuals vs fitted:",i), las=las, ...)
-               panel.smooth(x=coredata(na.omit(plotData[,2])), y=yval,
-                            col=colorset[1], col.smooth=colorset[2], lwd=lwd)
-             }, "5L" = {
                ## Time series plot of residuals with standard error bands
                chart.TimeSeries(Residuals, main=paste("Residuals:",i),
                                 colorset=colorset, xlab="", ylab="Residuals",
                                 lwd=lwd, lty="solid", las=las, ...)
-               abline(h=1.96*x$resid.sd[i], lwd=lwd, lty="dotted", col=colorset[2])
-               abline(h=-1.96*x$resid.sd[i], lwd=lwd, lty="dotted", col=colorset[2])
+               abline(h=1.96*resid.sd, lwd=lwd, lty="dotted", col=colorset[2])
+               abline(h=-1.96*resid.sd, lwd=lwd, lty="dotted", col=colorset[2])
                legend(x=legend.loc, lty=c("solid","dotted"), col=c(colorset[1:2]),
                       lwd=lwd, bty="n", legend=c("Residuals",expression("\u00b1 1.96 "*sigma)))
-             }, "6L" = {
+             }, "5L" = {
                ## Time series plot of squared residuals
                chart.TimeSeries(Residuals^2, colorset=colorset, xlab="",
                                 ylab=" Squared residuals", lwd=lwd,
                                 main=paste("Squared residuals:",i),
                                 legend.loc=NULL, pch=NULL, las=las, ...)
-             }, "7L" = {
+             }, "6L" = {
                ## Time series plot of absolute residuals
                chart.TimeSeries(abs(Residuals), colorset=colorset, xlab="",
                                 ylab="Absolute residuals", lwd=lwd,
                                 main=paste("Absolute residuals:",i),
                                 legend.loc=NULL, pch=NULL, las=las, ...)
-             }, "8L" = {
+             }, "7L" = {
                ## SACF and PACF of residuals
                chart.ACFplus(Residuals, maxlag=maxlag,
                              main=paste("SACF & PACF - Residuals:",i), ...)
-             }, "9L" = {
+             }, "8L" = {
                ## SACF and PACF of squared residuals
                chart.ACFplus(Residuals^2, maxlag=maxlag,
                              main=paste("SACF & PACF - Squared residuals:",i), ...)
-             }, "10L" = {
+             }, "9L" = {
                ## SACF and PACF of absolute residuals
                chart.ACFplus(abs(Residuals), maxlag=maxlag,
                              main=paste("SACF & PACF - Absolute residuals:",i), ...)
-             }, "11L" = {
+             }, "10L" = {
                ## Non-parametric density of residuals with normal overlaid
                ymax <- ceiling(max(0,den$y,den.norm))
                plot(den, xlab="Return residuals", lwd=lwd, col=colorset[1],
@@ -288,7 +249,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                       lwd=lwd, bty="n", legend=c("KDE","Normal"))
                mtext(text=paste("Normal (mu=",round(mean(Residuals),4),", sd=",
                                 round(resid.sd,4),")",sep=""), side=3, line=0.25, cex=0.8)
-             }, "12L" = {
+             }, "11L" = {
                ## Non-parametric density of residuals with skew-t overlaid
                ymax <- ceiling(max(0,den$y,den.st))
                plot(den, xlab="Return residuals", lwd=lwd, col=colorset[1],
@@ -299,7 +260,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                       lwd=lwd, bty="n", legend=c("KDE","Skew-t"))
                mtext(text=paste("Skew-t (xi=",dp.st[1],", omega=",dp.st[2],", alpha=",dp.st[3],
                                 ", nu=",dp.st[4],")",sep=""), side=3, line=0.25, cex=0.8)
-             }, "13L" = {
+             }, "12L" = {
                ## Histogram of residuals with non-parametric density and normal overlaid
                methods <- c("add.density","add.normal","add.rug")
                chart.Histogram(Residuals, xlab="Return residuals",
@@ -309,83 +270,12 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                       legend=c("KDE","Normal"))
                mtext(text=paste("Normal (mu=",round(mean(Residuals),4),", sd=",
                                 round(resid.sd,4),")",sep=""), side=3, line=0.25, cex=0.8)
-             }, "14L" = {
+             }, "13L" = {
                ##  QQ-plot of residuals
                chart.QQPlot(Residuals, envelope=0.95, col=colorset[1:2], lwd=lwd,
                             main=paste("QQ-plot of residuals:",i), ...)
                legend(x=legend.loc, col=colorset[2], lty="dashed", lwd=1, bty="n",
                       legend=c("0.95 C.Env."))
-             }, "15L" = {
-               ##  Recursive CUSUM test
-               if (!meth=="LS") {
-                 stop("CUSUM analysis applicable only for 'LS' fit.method.")
-               }
-               cusum.rec <- efp(formula(fit), type="Rec-CUSUM", data=fit$model)
-               plot(cusum.rec, main=paste("Recursive CUSUM test:",i), las=las,
-                    col=colorset, lwd=lwd, ...)
-             }, "16L" = {
-               ##  OLS-based CUSUM test
-               if (!meth=="LS") {
-                 stop("CUSUM analysis applicable only for 'LS' fit.method.")
-               }
-               cusum.ols <- efp(formula(fit), type="OLS-CUSUM", data=fit$model)
-               plot(cusum.ols, main=paste("LS-based CUSUM test:",i), las=las,
-                    col=colorset, lwd=lwd, ...)
-             }, "17L" = {
-               ##  Recursive estimates (RE) test of LS regression coefficients
-               if (!meth=="LS") {
-                 stop("CUSUM analysis applicable only for 'LS' fit.method.")
-               }
-               cusum.est <- efp(formula(fit), type="RE", data=fit$model)
-               plot(cusum.est, functional=NULL, col=colorset, las=0, cex.lab=0.7,
-                    main=paste("RE test (Recursive estimates test):",i), ...)
-               par(las=las, cex.lab=1)
-             }, "18L" = {
-               ##  Rolling regression over 24-period observation window
-               if (meth=="Lars") {
-                 stop("This option is not available for 'lars' fits.")
-               } else if (meth=="LS") {
-                 reg.z <- zoo(fit$model, as.Date(rownames(fit$model)))
-                 rollReg.z <- rollapply(reg.z, width=24, by.column=FALSE, align="right",
-                                        FUN = function(z) coef(lm(formula(fit), data=as.data.frame(z))))
-               } else if (meth=="DLS") {
-                 # get decay factor
-                 if (as.character(x$call["decay"])=="NULL") {
-                   decay <- 0.95 # default value for the decay factor
-                 } else {
-                   decay <- as.numeric(as.character(x$call["decay"]))
-                 }
-                 reg.z <- zoo(fit$model[-length(fit$model)], as.Date(rownames(fit$model)))
-                 # using exp. decaying weights for 24-period window
-                 rollReg.z <- rollapply(reg.z, width=24, by.column=FALSE, align="right",
-                                        FUN = function(z) coef(lm(formula(fit), data=as.data.frame(z), weights=decay^seq(23,0,-1))))
-               } else if (meth=="Robust") {
-                 reg.z <- zoo(fit$model, as.Date(rownames(fit$model)))
-                 rollReg.z <- rollapply(reg.z, width=24, by.column=FALSE, align="right",
-                                        FUN = function(z) coef(lmRob(formula(fit), data=as.data.frame(z))))
-               }
-               par(las=0)
-               plot(rollReg.z, las=las, cex=0.8, lwd=lwd, col=colorset[1], ...,
-                    main=paste("Rolling regression (24-period obs window):",i))
-               par(las=las, cex=1)
-             }, "19L" = {
-               ## Asset returns vs factor returns (single factor model)
-               if (meth=="Lars") {
-                 stop("This option is not available for 'lars' fits.")
-               }
-               if (length(x$factor.names)>1) {
-                 stop("Error: This option is only for single factor models.")
-               }
-               rawdata <- coredata(merge.xts(x$data[,i], x$data[,x$factor.names]))
-               plot(x=rawdata[,2], y=rawdata[,1], pch=20, main="",
-                    xlab=paste(x$factor.names, "Returns"), ylab=paste(i,"Returns"), ...)
-               coef <- summary(fit)$coefficients
-               a=coef[1,1]; b=coef[2,1]
-               se.a=round(coef[1,2],2); se.b=round(coef[2,2],2)
-               abline(a=a, b=b, col="red", lty=2, lwd=2)
-               lgnd <- c(bquote(.(meth) ~~ hat(alpha) == .(round(a,2))~(.(se.a))),
-                         bquote(.(meth) ~~  hat(beta) == .(round(b,2))~(.(se.b))))
-               legend(x=legend.loc, bty="n", legend=as.expression(lgnd), cex=1.2)
              },
              invisible()
       )
@@ -407,6 +297,9 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
       stop("Invalid argument: a.sub is not a valid subset of asset names.")
     }
     k <- ncol(x$beta)
+    if (k==1) {
+      f.sub <- 1
+    }
     if (!(all(f.sub %in% x$factor.names)) && !(all(f.sub %in% 1:k))) {
       stop("Invalid argument: f.sub is not a valid subset of factor names.")
     }
@@ -432,9 +325,7 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                  "Factor Contribution to SD",
                  "Factor Contribution to ES",
                  "Factor Contribution to VaR",
-                 "Asset returns vs. factor returns (single factor model)",
-                 "Time series of factor returns",
-                 "Average factor exposures"),
+                 "Time series of factor returns"),
                title="\nMake a plot selection (or 0 to exit):")
       }
 
@@ -538,37 +429,11 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                )
              },
              "12L" ={
-               ## Asset returns vs factor exposures (single factor model)
-               if (length(x$factor.names)>2 || (length(x$factor.names)==2 && !("Alpha" %in% x$factor.names))) {
-                 stop("Error: This option is only for single factor models.")
-               }
-               if (length(a.sub) < 5) {
-                 par(mfrow=c(length(a.sub),1))
-               } else {
-                 par(mfrow=c(ceiling(length(a.sub)/2),2))
-               }
-               for (i in a.sub) {
-                 asset <- x$asset.names[i]
-                 asset.ret <- fitted(x)[,asset]
-                 if (ncol(x$factor.returns)==1) {
-                   factor.ret <- x$factor.returns
-                   a <- 0
-                 } else {
-                   factor.ret <- x$factor.returns[,2]
-                   a <- x$factor.returns[,1]
-                 }
-                 rawdata <- coredata(merge.xts(asset.ret,factor.exp))
-                 plot(x=rawdata[,2], y=rawdata[,1], pch=20, main="",
-                      xlab=paste(x$factor.names, "Returns"), ylab=paste(asset,"Returns"), ...)
-                 coef <- summary(fit)$coefficients
-                 a=coef[1,1]; b=coef[2,1]
-                 se.a=round(coef[1,2],2); se.b=round(coef[2,2],2)
-                 abline(a=a, b=b, col="red", lty=2, lwd=2)
-                 lgnd <- c(bquote(.(meth) ~~ hat(alpha) == .(round(a,2))~(.(se.a))),
-                           bquote(.(meth) ~~  hat(beta) == .(round(b,2))~(.(se.b))))
-                 legend(x=legend.loc, bty="n", legend=as.expression(lgnd), cex=0.9)
-               }
-               par(mfrow=c(1,1))
+               ## Time series of factor returns
+               factor.ret <- x$factor.returns[,f.sub]
+               chart.TimeSeries(factor.ret, main="Time-series of factor returns", xlab="", ylab="Factor returns",
+                                colorset=colorset, lwd=lwd, pch=NULL, legend.loc=legend.loc, las=las, ...)
+
              },
              invisible()
       )
