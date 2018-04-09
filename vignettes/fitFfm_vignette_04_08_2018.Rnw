@@ -59,7 +59,7 @@ options(digits=3)
 
 The focus of this vignette is on the \code{fitFfm} function and related methods. The original function was designed by Doug Martin and initially implemented in S-PLUS by a number of University of Washington Ph.D. students: Christopher Green, Eric Aldrich, and Yindeng Jiang. Guy Yollin ported the function to R and Yi-An Chen modified that code as part of Google Summer of Code (GSOC) 2013 . Sangeetha Srinivasan tested and expanded the functionalities and S3 methods as part of GSOC in 2014 and 2015. Doug Martin, Avinash Acharya, Lingjie Yi and Chindhanai Uthaisaad added options to fit EWMA or GARCH model for errors, enabled a market + industry and/or sector and/or country model specification, etc. as part of GSOC 2016 and 2017. Refer to the other fundamental factor model vignette by Avinash Acharya for more examples elaborating on these recent functionalities and reporting functions.
 
-\subsection{Summary of fitFfm function and related methods}
+\subsection{Summary of fitFfm function and related S3 methods}
 
 Here's a summary of the fit function and related S3 methods (generic accessor functions) demonstrated in this vignette:
 
@@ -222,7 +222,25 @@ plot(fit.mkt.sector, which=1, colorset="black", f.sub=1:10, lwd=1, sort.by="mean
 The reparametrization of the market factor hasn't changed the order of sectors by mean factor return. The reader can verify that R-squared and other fit statistics haven't changed either.
 
 \newpage
-\subsection{}
+\subsection{Fundamental factor model with both sector and style factors}
+
+A fundamental factor model can simultaneously include both numeric style factors, such as size (market cap), value (book-to-price ratio), price momentum etc., as well as sector/industry classifications. The next example demonstrates this by including 2 style factors size and value to the sector model. The r-squared and adjusted r-squared improved.
+
+<<>>=
+# Market + Sector Factor Model
+fit.style.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
+                           date.var="DATE", add.intercept=TRUE,
+                  exposure.vars=c("GICS.SECTOR","LOG.MARKETCAP","BOOK2MARKET"))
+
+# summary of r-squared from fitted model
+summary(fit.style.sector$r2)
+
+# check if average adjusted r-squared improved vs. pure sector model
+# adjusted r2 = 1 - ((n-1)*(1-r2)/(n-p-1))
+print(adj.r2_style.sector <- 1-((447-1)*(1-mean(fit.style.sector$r2))/(447-13-1)))
+print(adj.r2_sector <- 1-((447-1)*(1-mean(fit.sector$r2))/(447-11-1)))
+@
+
 
 
 
