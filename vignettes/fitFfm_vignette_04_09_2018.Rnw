@@ -77,9 +77,9 @@ Here's a summary of the fit function and related S3 methods (generic accessor fu
 
 \item \verb"fmSdDecomp(object, use, ...)": Returns a list containing the standard deviation of asset returns based on the fitted factor model and the marginal, component and percentage component factor contributions estimated from the given sample. \code{"use"} specifies how missing values are to be handled.
 
-\item \verb"fmVaRDecomp(object, p, ...)": Returns a list containing the value-at-risk for asset returns based on the fitted factor model and the marginal, component and percentage component factor contributions estimated from the given sample. VaR computation can be non-parametric (sample quantile) or based on a Normal distribution. And, \code{"p"} specifies the confidence level.
+\item \verb"fmVaRDecomp(object, factor.cov, p, type, use, ...)": Returns a list containing the value-at-risk (VaR) for asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. \code{factor.cov} allows for user-specified factor covariance matrix; defaults to the sample covariance of historical factor returns. \code{type} specifies if VaR computation should be non-parametric (sample quantile) or based on a Normal distribution. And, \code{"p"} specifies the confidence level.
 
-\item \verb"fmEsDecomp(object, p, ...)": Returns a list containing the expected shortfall for asset returns based on the fitted factor model and the marginal, component and percentage component factor contributions estimated from the given sample. Expected shortfall computation can be non-parametric (sample quantile) or based on a Normal distribution.
+\item \verb"fmEsDecomp(object, factor.cov, p, type, use, ...)": Returns a list containing the expected shortfall (ES) for asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. \code{factor.cov} allows for user-specified factor covariance matrix; defaults to the sample covariance of historical factor returns. \code{type} specifies if VaR computation should be non-parametric (sample quantile) or based on a Normal distribution. And, \code{"p"} specifies the confidence level.
 
 \item \verb"plot(x)": The \code{plot} method for class "ffm" can be used for plotting factor model characteristics of a group of assets (default) or an individual asset. The user can select the type of plot either from the menu prompt or directly via argument \code{which}. In case multiple plots are needed, the menu is repeated after each plot (enter 0 to exit). User can also input a numeric vector of plot options via \code{which}.
 
@@ -224,21 +224,20 @@ The reparametrization of the market factor hasn't changed the order of sectors b
 \newpage
 \subsection{Fundamental factor model with both sector and style factors}
 
-A fundamental factor model can simultaneously include both numeric style factors, such as size (market cap), value (book-to-price ratio), price momentum etc., as well as sector/industry classifications. The next example demonstrates this by including 2 style factors size and value to the sector model. The r-squared and adjusted r-squared improved.
+A fundamental factor model can simultaneously include both numeric style factors, such as size (market cap), value (book-to-price ratio), price momentum etc., as well as sector/industry classifications. The next example demonstrates fitting a multi-factor model including 2 style factors size and value in addition to the sector model. Note that the r-squared and adjusted r-squared have improved.
 
 <<>>=
 # Market + Sector Factor Model
 fit.style.sector <- fitFfm(data=stock, asset.var="TICKER", ret.var="RETURN",
-                           date.var="DATE", add.intercept=TRUE,
-                  exposure.vars=c("GICS.SECTOR","LOG.MARKETCAP","BOOK2MARKET"))
+  date.var="DATE", exposure.vars=c("GICS.SECTOR","LOG.MARKETCAP","BOOK2MARKET"))
 
 # summary of r-squared from fitted model
 summary(fit.style.sector$r2)
 
 # check if average adjusted r-squared improved vs. pure sector model
 # adjusted r2 = 1 - ((n-1)*(1-r2)/(n-p-1))
-print(adj.r2_style.sector <- 1-((447-1)*(1-mean(fit.style.sector$r2))/(447-13-1)))
-print(adj.r2_sector <- 1-((447-1)*(1-mean(fit.sector$r2))/(447-11-1)))
+print(adj.r2_style.sector <- 1-((447-1)*(1-mean(fit.style.sector$r2))/(447-12-1)))
+print(adj.r2_sector <- 1-((447-1)*(1-mean(fit.sector$r2))/(447-10-1)))
 @
 
 
@@ -266,10 +265,10 @@ where, $R$ is the $N \times T$ matrix of asset returns, $B$ is the $N \times K$ 
 
 \code{fmCov()} computes the factor model covariance from a fitted factor model. The covariance of factor returns is the sample covariance matrix by default, but the option exists for the user to specify their own. Options for handling missing observations include "pairwise.complete.obs" (default), "everything", "all.obs", "complete.obs" and "na.or.complete".
 
-<<fig.cap="Factor model return correlation (pairwise complete obs)">>=
-fmCov(fit.sub)
-# factor model return correlation plot
-plot(fit.sub, which=8)
+<<fig.cap="Factor model return correlation (pairwise complete obs)", fig.show='asis', fig.width=5, fig.height=5>>=
+fmCov(fit.style.sector)[1:6,1:6]
+# factor model return correlation plot (for 1st 6 assets by default)
+plot(fit.style.sector, which=8)
 @
 
 \subsection{Standard deviation decomposition}
@@ -285,7 +284,7 @@ By Euler's theorem, the standard deviation of asset $i$'s return is:
 \begin{align}
 Sd.fm_i = \sum_{k=1}^{K+1} cSd_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mSd_{i,k}
 \end{align}
-where, summation is across the $K$ factors and the residual, $\mathbf{cSd_i}$ and $\mathbf{mSd_i}$ are the component and marginal contributions to $Sd.fm_i$ respectively. Computing $Sd.fm_i$ and $\mathbf{mSd_i}$ is very straight forward. The formulas are given below and details are in \citet{meucci2007risk}. The covariance term is approximated by the sample covariance and $\odot$ represents element-wise multiplication.
+where, summation is across the $K$ factors and the residual, $\mathbf{cSd_i}$ and $\mathbf{mSd_i}$ are the component and marginal contributions to $Sd.fm_i$ respectively. Computing $Sd.fm_i$ and $\mathbf{mSd_i}$ is straight forward. The formulas are given below and details are in \citet{meucci2007risk}. The covariance term is approximated by the sample covariance and $\odot$ represents element-wise multiplication.
 \begin{align}
 & Sd.fm_i = \sqrt{\bm\beta_i^{*'}\: cov(\mathbf{F^*})\: \bm\beta_i^*} \\
 & \mathbf{mSd_i} = \frac{cov(\mathbf{F^*})\: \bm\beta_i^*}{Sd.fm_i} \\
@@ -294,19 +293,19 @@ where, summation is across the $K$ factors and the residual, $\mathbf{cSd_i}$ an
 
 \code{fmSdDecomp} performs this decomposition for all assets in the given factor model fit object as shown below. The total standard deviation and component, marginal and percentage component contributions for each asset are returned.
 
-<<fig.cap="Percentage factor contribution to SD">>=
-decomp <- fmSdDecomp(fit.sub)
+<<fig.cap="Percentage factor contribution to SD", fig.show='asis', fig.width=5, fig.height=5>>=
+decomp <- fmSdDecomp(fit.style.sector)
 names(decomp)
-# get the factor model standard deviation for all assets
-decomp$Sd.fm
-# get the component contributions to Sd
-decomp$cSd
-# get the marginal factor contributions to Sd
-decomp$mSd
-# get the percentage component contributions to Sd
-decomp$pcSd
-# plot the percentage component contributions to Sd
-plot(fit.sub, which=9, f.sub=1:3)
+# get the factor model standard deviation for 1st 6 assets
+decomp$Sd.fm[1:6]
+# get the component contributions to Sd for 1st 6 assets, 4 factors
+decomp$cSd[1:6,1:4]
+# get the marginal factor contributions to Sd for 1st 6 assets, 4 factors
+decomp$mSd[1:6,1:4]
+# get the % component contributions to Sd for 1st 6 assets, 4 factors
+decomp$pcSd[1:6,1:4]
+# plot the % component contributions to Sd for 1st 6 assets
+plot(fit.style.sector, which=9, f.sub=c(1:5,9))
 @
 \newpage
 
@@ -317,20 +316,21 @@ The VaR version of equation 6 is given below. By Euler's theorem, the value-at-r
 VaR.fm_i = \sum_{k=1}^{K+1} cVaR_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mVaR_{i,k}
 \end{equation}
 
-The marginal contribution to $VaR.fm$ is defined as the expectation of $F.star$, conditional on the loss being equal to $VaR.fm$. This is approximated as described in \citet{epperlein2006portfolio} using a triangular smoothing kernel. $VaR.fm$ is calculated as the sample quantile.
+The marginal contribution to $VaR.fm$ is defined as the expectation of $F.star$, conditional on the loss being equal to $VaR.fm$. This is approximated as described in \citet{epperlein2006portfolio} using a triangular smoothing kernel. \code{type} gives the option to estimate $VaR.fm$ non-parametrically using the sample quantile (default) or assuming a normal distribution.
 
-\code{fmVaRDecomp} performs this decomposition for all assets in the given factor model fit object as shown below.
+\code{fmVaRDecomp} performs this decomposition for all assets in the given factor model fit object as shown below. The total VaR and component, marginal and percentage component contributions for each asset are returned.
 
-<<fig.cap="Percentage factor contribution to VaR">>=
-decomp1 <- fmVaRDecomp(fit.sub)
+<<fig.cap="Percentage factor contribution to VaR", fig.show='asis', fig.width=6, fig.height=6>>=
+decomp1 <- fmVaRDecomp(fit.style.sector, type="normal", p=0.10)
 names(decomp1)
-# get the factor model value-at-risk for all assets
-decomp1$VaR.fm
-# get the percentage component contributions to VaR
-decomp1$pcVaR
-# plot the percentage component contributions to VaR
-plot(fit.sub, which=11, f.sub=1:3)
+# get the factor model value-at-risk for 1st 6 assets
+decomp1$VaR.fm[1:6]
+# print the number of VaR exceedences for 1st 6 assets
+decomp1$n.exceed[1:6]
+# plot the % component contributions to VaR for for 1st 6 assets
+plot(fit.style.sector, which=11, f.sub=c(1:5,9))
 @
+\newpage
 
 \subsection{Expected Shortfall decomposition}
 
@@ -339,22 +339,17 @@ The Expected Shortfall (ES) version of equation 6 is given below. By Euler's the
 ES.fm_i = \sum_{k=1}^{K+1} cES_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mES_{i,k}
 \end{equation}
 
-The marginal contribution to $ES.fm$ is defined as the expectation of $F.star$, conditional on the loss being less than or equal to $VaR.fm$. This is estimated as a sample average of the observations in that data window. Once again, $VaR.fm$ is the sample quantile.
+The marginal contribution to $ES.fm$ is defined as the expectation of $F.star$, conditional on the loss being less than or equal to $ES.fm$. This is estimated as a sample average of the observations in that data window. Once again, input variable \code{type} gives the option to estimate $ES.fm$ non-parametrically using the sample quantile (default) or assuming a normal distribution.
 
-\code{fmEsDecomp} performs this decomposition for all assets in the given factor model fit object as shown below.
+\code{fmEsDecomp} performs this decomposition for all assets in the given factor model fit object as shown below. The total ES and component, marginal and percentage component contributions for each asset are returned.
+
 <<fig.cap="Percentage factor contribution to ES">>=
-decomp2 <- fmEsDecomp(fit.sub, method="historical")
+decomp2 <- fmEsDecomp(fit.style.sector, type="normal")
 names(decomp2)
-# get the factor model expected shortfall for all assets
-decomp2$ES.fm
-# get the component contributions to Sd
-decomp2$cES
-# get the marginal factor contributions to ES
-decomp2$mES
-# get the percentage component contributions to ES
-decomp2$pcES
-# plot the percentage component contributions to ES
-plot(fit.sub, which=10, f.sub=1:3)
+# get the factor model expected shortfall for 1st 6 assets
+decomp2$ES.fm[1:6]
+# plot the % component contributions to ES
+plot(fit.style.sector, which=10, f.sub=c(1:5,9))
 @
 
 \newpage

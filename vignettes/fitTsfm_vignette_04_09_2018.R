@@ -133,13 +133,13 @@ plot(fit.sub, which=9, f.sub=1:3)
 
 ## ----fig.cap="Percentage factor contribution to VaR", fig.show='asis', fig.width=5, fig.height=5----
 # factor model VaR decomp using estimated factor return covariance (default)
-# using tail probability = 10% (default = 5%)
-decomp1 <- fmVaRDecomp(fit.sub, p=0.10)
+# using tail probability = 10% and parametric (normal) VaR estimation
+decomp1 <- fmVaRDecomp(fit.sub, p=0.10, type="normal")
 names(decomp1)
 # get the factor model value-at-risk for all assets
 decomp1$VaR.fm
-# get the percentage component contributions to VaR
-decomp1$pcVaR
+# print the number of VaR exceedences for all assets
+decomp1$n.exceed
 # plot the percentage component contributions to VaR
 plot(fit.sub, which=11, f.sub=1:3)
 

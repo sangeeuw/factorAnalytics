@@ -180,8 +180,8 @@ plot(fit.pca, which=9, f.sub=1:2, a.sub=1:15)
 
 ## ----fig.cap="Percentage factor contribution to VaR", fig.width=7, fig.height=5----
 # factor model VaR decomp using estimated factor return covariance (default)
-# using tail probability = 10% (default = 5%)
-decomp1 <- fmVaRDecomp(fit.apca, p=0.10)
+# using tail probability = 10% and a parametric (normal) VaR estimation
+decomp1 <- fmVaRDecomp(fit.apca, p=0.10, type="normal")
 names(decomp1)
 # factor model Value-at-Risk; print first 6 assets
 head(decomp1$VaR.fm)

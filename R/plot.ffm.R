@@ -150,11 +150,11 @@
 #' @export
 
 plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
-                      plot.single=FALSE, asset.name, use.date=NULL,
-                      colorset=c("royalblue","dimgray","olivedrab","firebrick",
-                                 "goldenrod","mediumorchid","deepskyblue",
-                                 "chocolate","darkslategray"),
-                      legend.loc="topleft", las=1, lwd=2, maxlag=15, ...) {
+                     plot.single=FALSE, asset.name, use.date=NULL,
+                     colorset=c("royalblue","dimgray","olivedrab","firebrick",
+                                "goldenrod","mediumorchid","deepskyblue",
+                                "chocolate","darkslategray"),
+                     legend.loc="topleft", las=1, lwd=2, maxlag=15, ...) {
 
   which.vec <- which
   which <- which[1]
@@ -189,9 +189,9 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
       if (is.null(which)) {
         which <-
           menu(c("Actual and fitted asset returns",
-                 "Actual vs fitted asset returns",
-                 "Residuals vs fitted asset returns",
-                 "Sqrt. of modified residuals vs fitted",
+                 "Actual vs. fitted asset returns",
+                 "Residuals vs. fitted asset returns",
+                 "Sqrt. of modified residuals vs. fitted",
                  "Residuals with standard error bands",
                  "Time series of squared residuals",
                  "Time series of absolute residuals",
@@ -206,7 +206,9 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                  "CUSUM test-LS residuals",
                  "Recursive estimates (RE) test of LS regression coefficients",
                  "Rolling estimates over a 24-period observation window",
-                 "Asset returns vs factor returns (single factor model)"),
+                 "Asset returns vs. factor returns (single factor model)",
+                 "Time series of factor exposures",
+                 "Average factor exposures"),
                title="\nMake a plot selection (or 0 to exit):")
       }
 
@@ -422,17 +424,17 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
           menu(c("Distribution of factor returns",
                  "Factor exposures from the last period",
                  "Actual and Fitted asset returns",
-                 "R-squared",
-                 "Residual variance",
+                 "Time-series of R-squared values",
+                 "Residual variance across assets",
                  "Scatterplot matrix of residuals, with histograms, density overlays, correlations and significance stars",
                  "Factor Model Residual Correlation",
                  "Factor Model Return Correlation",
                  "Factor Contribution to SD",
                  "Factor Contribution to ES",
                  "Factor Contribution to VaR",
-                 "Asset returns vs factor returns (single factor model)",
+                 "Asset returns vs. factor returns (single factor model)",
                  "Time series of factor returns",
-                 "Time series of style factor exposures"),
+                 "Average factor exposures"),
                title="\nMake a plot selection (or 0 to exit):")
       }
 
@@ -442,19 +444,18 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
              "1L" = {
                ## Distribution of factor returns
                main <- "Distribution of factor returns"
-               chart.Boxplot(x$factor.returns[,f.sub], colorset=colorset,
-                             lwd=lwd, main=main, xlab="Factor returns", ylab="",
+               chart.Boxplot(x$factor.returns[,f.sub], colorset="black", lwd=1, main=main, xlab="Factor returns", ylab="",
                              legend.loc=legend.loc, pch=NULL, las=las, ...)
              },
              "2L" = {
-               ## Factor exposures from the given date
-               main <- "Factor exposures from the given date"
+               ## Factor exposures from the last period
+               main <- "Factor exposures from the last period"
                C <- x$beta[a.sub,f.sub,drop=FALSE]
                Y <- row(C, as.factor=T)
                X <- as.vector(as.matrix(C[,,drop=FALSE]))
                Z <- col(C, as.factor=T)
                plot(
-                 barchart(Y~X|Z, main="Factor model Betas \n", xlab="", as.table=TRUE,
+                 barchart(Y~X|Z, main="Factor exposures from the last period \n", xlab="", as.table=TRUE,
                           origin=0, col=colorset[1], scales=list(relation="free"), ...)
                )
              },
@@ -467,22 +468,24 @@ plot.ffm <- function(x, which=NULL, f.sub=1:2, a.sub=1:6,
                }
                for (i in a.sub) {
                  asset <- x$asset.names[i]
-                 plotData <- merge.xts(x$data[,x$ret.var], fitted(x)[,asset])
+                 fitted.ret <- fitted(x)[,asset]
+                 asset.ret <- subset(x$data,TICKER==asset)[,c(x$date.var,x$ret.var)]
+                 asset.ret.xts <- as.xts(asset.ret[,2], order.by=index(fitted.ret))
+                 plotData <- merge.xts(asset.ret.xts, fitted.ret)
                  colnames(plotData) <- c("Actual","Fitted")
                  main <- paste("Actual and Fitted:", asset)
                  chart.TimeSeries(plotData, colorset=colorset, lwd=lwd, main=main, xlab="",
-                                  ylab="Asset returns", legend.loc=legend.loc, pch=NULL, las=las,...)
+                                  ylab="Asset returns", legend.loc=legend.loc, pch=NULL, las=las, ...)
                }
                par(mfrow=c(1,1))
              },
              "4L" ={
-               ## R-squared
-               plot(
-                 barchart(x$r2[a.sub], main="R-squared values", xlab="", col=colorset[1], ...)
-               )
+               ## Time-series of R-squared values
+               chart.TimeSeries(x$r2, main="Time-series of R-squared values", xlab="", ylab="R-squared",
+                                colorset=colorset, lwd=lwd, pch=NULL, las=las, ...)
              },
              "5L" = {
-               ## Residual variance
+               ## Residual variance across assets
                plot(
                  barchart(x$resid.var[a.sub], main="Residual variance", xlab="", col=colorset[1], ...)
                )

@@ -2,7 +2,7 @@ Package: factorAnalytics
 Type: Package
 Title: Factor Analytics
 Version: 2.1.04
-Date: 2018-04-08
+Date: 2018-04-09
 Author: Eric Zivot, Doug Martin, Sangeetha Srinivasan, Yi-An Chen, Lingjie Yi, 
         Avinash Acharya and Chindhanai Uthaisaad
 Maintainer: Sangeetha Srinivasan <sangee@uw.edu>

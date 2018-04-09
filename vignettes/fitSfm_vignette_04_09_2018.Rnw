@@ -74,9 +74,9 @@ Here's a list of the functions and methods demonstrated in this vignette:
 
 \item \verb"fmSdDecomp(object, factor.cov, use, ...)": Returns a list containing the standard deviation of asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. \code{factor.cov} allows for user-specified factor covariance matrix; defaults to the sample covariance of historical factor returns. \code{"use"} specifies how missing values are to be handled.
 
-\item \verb"fmVaRDecomp(object, factor.cov, p, type, use, ...)": Returns a list containing the value-at-risk for asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. \code{type} specifies if VaR computation should be non-parametric (sample quantile) or based on a Normal distribution. And, \code{"p"} specifies the confidence level.
+\item \verb"fmVaRDecomp(object, factor.cov, p, type, use, ...)": Returns a list containing the value-at-risk (VaR) for asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. \code{factor.cov} allows for user-specified factor covariance matrix; defaults to the sample covariance of historical factor returns. \code{type} specifies if VaR computation should be non-parametric (sample quantile) or based on a Normal distribution. And, \code{"p"} specifies the confidence level.
 
-\item \verb"fmEsDecomp(object, factor.cov, p, type, use, ...)": Returns a list containing the expected shortfall for asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. Expected shortfall computation can also be non-parametric (sample quantile) or based on a Normal distribution.
+\item \verb"fmEsDecomp(object, factor.cov, p, type, use, ...)": Returns a list containing the expected shortfall (ES) for asset returns based on the fitted factor model and the estimated marginal, component and percentage component factor contributions. \code{factor.cov} allows for user-specified factor covariance matrix; defaults to the sample covariance of historical factor returns. \code{type} specifies if VaR computation should be non-parametric (sample quantile) or based on a Normal distribution. And, \code{"p"} specifies the confidence level.
 
 \item \verb"plot(x)": The \code{plot} method for class "sfm" can be used for plotting factor model characteristics of a group of assets (default) or an individual asset. The user can select the type of plot either from the menu prompt or directly via argument \code{which}. In case multiple plots are needed, the menu is repeated after each plot (enter 0 to exit). User can also input a numeric vector of plot options via \code{which}.
 
@@ -398,7 +398,7 @@ By Euler's theorem, the standard deviation of asset $i$'s return is:
 \begin{align}
 Sd.fm_i = \sum_{k=1}^{K+1} cSd_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mSd_{i,k}
 \end{align}
-where, summation is across the $K$ factors and the residual, $\mathbf{cSd_i}$ and $\mathbf{mSd_i}$ are the component and marginal contributions to $Sd.fm_i$ respectively. Computing $Sd.fm_i$ and $\mathbf{mSd_i}$ is very straight forward. The formulas are given below and details are in \citet{meucci2007risk}. The covariance term is approximated by the sample covariance and $\odot$ represents element-wise multiplication.
+where, summation is across the $K$ factors and the residual, $\mathbf{cSd_i}$ and $\mathbf{mSd_i}$ are the component and marginal contributions to $Sd.fm_i$ respectively. Computing $Sd.fm_i$ and $\mathbf{mSd_i}$ is straight forward. The formulas are given below and details are in \citet{meucci2007risk}. The covariance term is approximated by the sample covariance and $\odot$ represents element-wise multiplication.
 \begin{align}
 & Sd.fm_i = \sqrt{\bm\beta_i^{*'}\: cov(\mathbf{F^*})\: \bm\beta_i^*} \\
 & \mathbf{mSd_i} = \frac{cov(\mathbf{F^*})\: \bm\beta_i^*}{Sd.fm_i} \\
@@ -425,14 +425,14 @@ The VaR version of equation 6 is given below. By Euler's theorem, the value-at-r
 VaR.fm_i = \sum_{k=1}^{K+1} cVaR_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mVaR_{i,k}
 \end{equation}
 
-The marginal contribution to $VaR.fm$ is defined as the expectation of $F.star$, conditional on the loss being equal to $VaR.fm$. This is approximated as described in \citet{epperlein2006portfolio} using a triangular smoothing kernel. \code{type} gives the option to estimate $VaR.fm$ non-parametrically using the sample quantile or assuming a normal distribution.
+The marginal contribution to $VaR.fm$ is defined as the expectation of $F.star$, conditional on the loss being equal to $VaR.fm$. This is approximated as described in \citet{epperlein2006portfolio} using a triangular smoothing kernel. \code{type} gives the option to estimate $VaR.fm$ non-parametrically using the sample quantile (default) or assuming a normal distribution.
 
 \code{fmVaRDecomp} performs this decomposition for all assets in the given factor model fit object as shown below. The total VaR and component, marginal and percentage component contributions for each asset are returned.
 
 <<fig.cap="Percentage factor contribution to VaR", fig.width=7, fig.height=5>>=
 # factor model VaR decomp using estimated factor return covariance (default)
-# using tail probability = 10% (default = 5%)
-decomp1 <- fmVaRDecomp(fit.apca, p=0.10)
+# using tail probability = 10% and a parametric (normal) VaR estimation
+decomp1 <- fmVaRDecomp(fit.apca, p=0.10, type="normal")
 names(decomp1)
 # factor model Value-at-Risk; print first 6 assets
 head(decomp1$VaR.fm)
@@ -449,7 +449,7 @@ The Expected Shortfall (ES) version of equation 6 is given below. By Euler's the
 ES.fm_i = \sum_{k=1}^{K+1} cES_{i,k} = \sum_{k=1}^{K+1} \beta^*_{i,k} \: mES_{i,k}
 \end{equation}
 
-The marginal contribution to $ES.fm$ is defined as the expectation of $F.star$, conditional on the loss being less than or equal to $VaR.fm$. This is estimated as a sample average of the observations in that data window. Once again, input variable \code{type} gives the option to estimate $VaR.fm$ non-parametrically using the sample quantile or assuming a normal distribution.
+The marginal contribution to $ES.fm$ is defined as the expectation of $F.star$, conditional on the loss being less than or equal to $ES.fm$. This is estimated as a sample average of the observations in that data window. Once again, input variable \code{type} gives the option to estimate $ES.fm$ non-parametrically using the sample quantile (default) or assuming a normal distribution.
 
 \code{fmEsDecomp} performs this decomposition for all assets in the given factor model fit object as shown below. The total ES and component, marginal and percentage component contributions for each asset are returned.
 
